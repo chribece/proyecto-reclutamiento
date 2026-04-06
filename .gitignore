@@ -9,3 +9,9 @@ __pycache__/
 data/
 output/
 .ipynb_checkpoints/
+
+# Base de datos SQLite local
+instance/
+*.db
+*.sqlite
+*.sqlite3
