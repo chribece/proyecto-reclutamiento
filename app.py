@@ -1353,3 +1353,4 @@ if __name__ == '__main__':
 else:
     # Configuración para producción (Render.com)
     # Render establece las variables de entorno automáticamente
+    pass
