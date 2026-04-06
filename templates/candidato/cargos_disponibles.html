@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Cargos Disponibles{% endblock %}
+
+{% block content %}
+<div class="cargos-container">
+    <div class="page-header">
+        <h1><i class="fas fa-briefcase"></i> Vacantes Disponibles</h1>
+        <p>Encuentra y postúlate a los mejores cargos</p>
+    </div>
+
+    {% if cargos %}
+    <div class="cargos-lista">
+        {% for cargo in cargos %}
+        <div class="cargo-item">
+            <div class="cargo-info">
+                <h2 class="cargo-titulo">{{ cargo.nombre }}</h2>
+                <div class="cargo-meta">
+                    <span class="meta-item">
+                        <i class="fas fa-building"></i> {{ cargo.departamento }}
+                    </span>
+                    <span class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i> {{ cargo.nombre_sucursal or cargo.direccion_domicilio }}
+                    </span>
+                    <span class="meta-item">
+                        <i class="fas fa-briefcase"></i> {{ cargo.tipo_contrato }}
+                    </span>
+                </div>
+                
+                <p class="cargo-desc">{{ cargo.descripcion }}</p>
+                
+                {% if cargo.salario_minimo %}
+                <div class="salario-info">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>${{ "%.2f"|format(cargo.salario_minimo) }} - ${{ "%.2f"|format(cargo.salario_maximo) }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="cargo-acciones">
+                <a href="{{ url_for('postular_a_cargo', cargo_id=cargo.id_cargo) }}" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Postularme
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>No hay cargos disponibles en este momento.</p>
+    </div>
+    {% endif %}
+
+    <div class="page-footer">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al dashboard
+        </a>
+        <a href="{{ url_for('actualizar_perfil_candidato') }}" class="btn btn-primary">
+            <i class="fas fa-user-edit"></i> Actualizar mi perfil
+        </a>
+        <a href="{{ url_for('mis_postulaciones') }}" class="btn btn-secondary">
+            <i class="fas fa-file-alt"></i> Ver mis postulaciones
+        </a>
+    </div>
+</div>
+
+<style>
+.cargos-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    border-radius: 12px;
+    color: white;
+}
+
+.page-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.page-header p {
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.cargos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.cargo-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    transition: all 0.3s ease;
+}
+
+.cargo-item:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transform: translateX(5px);
+}
+
+.cargo-info {
+    flex: 1;
+}
+
+.cargo-titulo {
+    margin: 0 0 0.5rem 0;
+    color: var(--color-dark);
+    font-size: 1.3rem;
+}
+
+.cargo-meta {
+    display: flex;
+    gap: 1rem;
+    margin: 0.5rem 0 1rem 0;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.meta-item i {
+    color: var(--color-primary);
+}
+
+.cargo-desc {
+    color: #555;
+    line-height: 1.6;
+    margin: 1rem 0;
+}
+
+.salario-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(242, 165, 23, 0.1);
+    color: var(--color-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.cargo-acciones {
+    display: flex;
+    gap: 1rem;
+    margin-left: 1.5rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(242, 165, 23, 0.3);
+}
+
+.btn-secondary {
+    background: var(--color-light);
+    color: var(--color-dark);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+.page-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #eee;
+}
+
+@media (max-width: 768px) {
+    .cargo-item {
+        flex-direction: column;
+    }
+    
+    .cargo-acciones {
+        margin-left: 0;
+        margin-top: 1rem;
+    }
+    
+    .page-footer {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

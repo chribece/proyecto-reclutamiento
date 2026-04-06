@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - GF{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width: 1000px; margin: 0 auto;">
+    <h1 style="color: var(--color-dark); margin-bottom: 1.5rem;">
+        <i class="fas fa-user-plus" style="color: var(--color-primary);"></i>
+        {{ titulo }}
+    </h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <!-- SECCIÓN 1: DATOS PERSONALES -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-id-card"></i> Datos Personales</h3>
+            </div>
+            
+            <div class="form-group">
+                {{ form.cedula.label(class="form-label") }}
+                {{ form.cedula(class="form-control", placeholder="1234567890", maxlength="10", id="cedula-input") }}
+                <div id="cedula-error" class="error-message" style="display: none; color: var(--color-danger); font-size: 0.85rem; margin-top: 0.25rem;"></div>
+                <small style="color: #666;">Ingrese exactamente 10 dígitos, sin guiones ni espacios</small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    {{ form.nombre.label(class="form-label") }}
+                    {{ form.nombre(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.apellido.label(class="form-label") }}
+                    {{ form.apellido(class="form-control") }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control", type="email") }}
+                {% if form.email.errors %}
+                    <span style="color: var(--color-danger);">{{ form.email.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    {{ form.telefono.label(class="form-label") }}
+                    {{ form.telefono(class="form-control", id="telefono-input") }}
+                    <div id="telefono-error" class="error-message" style="display: none; color: var(--color-danger); font-size: 0.85rem; margin-top: 0.25rem;"></div>
+                    <small style="color: #666;">Celular ecuatoriano (10 dígitos, ej: 0991234567)</small>
+                </div>
+                <div class="form-group">
+                    {{ form.direccion_domicilio.label(class="form-label") }}
+                    {{ form.direccion_domicilio(class="form-control") }}
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: VACANTE -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-briefcase"></i> Vacante de Interés</h3>
+            </div>
+            <div class="form-group">
+                {{ form.cargo_id.label(class="form-label") }}
+                {{ form.cargo_id(class="form-control form-select") }}
+                <small style="color: #666;">Seleccione el cargo al que desea aplicar</small>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: INFORMACIÓN PROFESIONAL -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-graduation-cap"></i> Información Profesional</h3>
+            </div>
+            
+            <div class="form-group">
+                {{ form.resumen.label(class="form-label") }}
+                {{ form.resumen(class="form-control", rows="3", placeholder="Breve descripción de su perfil profesional...") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.habilidades.label(class="form-label") }}
+                {{ form.habilidades(class="form-control", placeholder="Python, JavaScript, Gestión de equipos, etc.") }}
+                <small style="color: #666;">Separadas por coma</small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    {{ form.nivel_educativo.label(class="form-label") }}
+                    {{ form.nivel_educativo(class="form-control form-select") }}
+                </div>
+                <div class="form-group">
+                    {{ form.disponibilidad.label(class="form-label") }}
+                    {{ form.disponibilidad(class="form-control form-select") }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.salario_esperado.label(class="form-label") }}
+                {{ form.salario_esperado(class="form-control", placeholder="0.00") }}
+            </div>
+        </div>
+
+        <!-- SECCIÓN 4: EXPERIENCIA LABORAL (3 máximo) -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-building"></i> Experiencia Laboral (Máximo 3)</h3>
+            </div>
+            
+            {% for i in range(3) %}
+            {% set exp = experiencias[i-1] if experiencias and experiencias|length >= i else None %}
+            <div style="border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; background: #f9f9f9;">
+                <h4 style="margin-bottom: 1rem; color: var(--color-secondary);">Experiencia #{{ i + 1 }}</h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Empresa</label>
+                        <input type="text" name="exp_{{ i }}-empresa" class="form-control" placeholder="Nombre de la empresa" value="{{ exp.empresa if exp else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cargo</label>
+                        <input type="text" name="exp_{{ i }}-cargo" class="form-control" placeholder="Título del cargo" value="{{ exp.cargo if exp else '' }}">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input type="date" name="exp_{{ i }}-fecha_inicio" class="form-control" value="{{ exp.fecha_inicio if exp else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha Fin</label>
+                        <input type="date" name="exp_{{ i }}-fecha_fin" class="form-control" value="{{ exp.fecha_fin if exp else '' }}">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end; padding-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="exp_{{ i }}-actual" value="y" style="width: 20px; height: 20px;" {% if exp and exp.actual %}checked{% endif %}>
+                            <span>Trabajo actual</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label">Descripción</label>
+                    <textarea name="exp_{{ i }}-descripcion" class="form-control" rows="3" placeholder="Descripción de responsabilidades y logros...">{{ exp.descripcion if exp else '' }}</textarea>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- SECCIÓN 5: REFERENCIAS PERSONALES (3 máximo) -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-users"></i> Referencias Personales (Máximo 3)</h3>
+            </div>
+            
+            <div class="table-container">
+                <table class="table" style="background: white;">
+                    <thead>
+                        <tr>
+                            <th>Nombres Completos</th>
+                            <th>Teléfono</th>
+                            <th>Tipo de Referencia</th>
+                            <th>¿Es colaborador?</th>
+                            <th>Contestación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in range(3) %}
+                        {% set ref = referencias[i-1] if referencias and referencias|length >= i else None %}
+                        <tr>
+                            <td>
+                                <input type="text" name="ref_{{ i }}-nombre_completo" class="form-control" placeholder="Nombre completo" value="{{ ref.nombre if ref else '' }}">
+                            </td>
+                            <td>
+                                <input type="text" name="ref_{{ i }}-telefono" class="form-control telefono-referencia" placeholder="Teléfono" value="{{ ref.telefono if ref else '' }}" maxlength="10">
+                                <div class="error-message" id="ref-{{ i }}-telefono-error" style="display: none; color: var(--color-danger); font-size: 0.75rem; margin-top: 0.25rem;"></div>
+                            </td>
+                            <td>
+                                <select name="ref_{{ i }}-tipo_referencia" class="form-control form-select">
+                                    <option value="Familiar" {% if ref and ref.relacion == 'Familiar' %}selected{% endif %}>Familiar</option>
+                                    <option value="Amigo" {% if ref and ref.relacion == 'Amigo' or not ref %}selected{% endif %}>Amigo</option>
+                                    <option value="Compañero trabajo" {% if ref and ref.relacion == 'Compañero trabajo' %}selected{% endif %}>Compañero trabajo</option>
+                                    <option value="Jefe anterior" {% if ref and ref.relacion == 'Jefe anterior' %}selected{% endif %}>Jefe anterior</option>
+                                    <option value="Otro" {% if ref and ref.relacion == 'Otro' %}selected{% endif %}>Otro</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="ref_{{ i }}-es_colaborador" class="form-control form-select">
+                                    <option value="0" {% if not ref or not ref.es_colaborador %}selected{% endif %}>NO</option>
+                                    <option value="1" {% if ref and ref.es_colaborador %}selected{% endif %}>SI</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="ref_{{ i }}-contestacion" class="form-control" placeholder="Contestación" value="{{ ref.descripcion if ref else 'No aplica' }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 6: DOCUMENTOS -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-file-pdf"></i> Documentos</h3>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Currículum Vitae (PDF)</label>
+                <input type="file" name="curriculum" class="form-control" accept=".pdf">
+                <small style="display: block; margin-top: 0.5rem; color: #666;">
+                    <i class="fas fa-info-circle"></i> Máximo 5 MB. Solo archivos PDF.
+                </small>
+            </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; margin-bottom: 3rem;">
+            <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                <i class="fas fa-save"></i> Guardar Candidato
+            </button>
+            <a href="{{ url_for('lista_candidatos') }}" class="btn btn-secondary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Validaciones en tiempo real para formato de datos de Ecuador
+
+// Validación de Cédula (DNI) - Solo números, 10 dígitos
+document.addEventListener('DOMContentLoaded', function() {
+    const cedulaInput = document.getElementById('cedula-input');
+    const cedulaError = document.getElementById('cedula-error');
+    
+    if (cedulaInput) {
+        cedulaInput.addEventListener('input', function(e) {
+            // Eliminar caracteres no numéricos
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Limitar a 10 dígitos
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
+            
+            e.target.value = value;
+            
+            // Validar en tiempo real
+            if (value.length > 0 && value.length < 10) {
+                cedulaError.textContent = 'La cédula debe tener exactamente 10 dígitos';
+                cedulaError.style.display = 'block';
+                e.target.style.borderColor = 'var(--color-danger)';
+            } else if (value.length === 10) {
+                cedulaError.style.display = 'none';
+                e.target.style.borderColor = '#28a745'; // Verde para válido
+            } else {
+                cedulaError.style.display = 'none';
+                e.target.style.borderColor = '';
+            }
+        });
+    }
+    
+    // Validación de Teléfono Principal - Celular Ecuador (10 dígitos, empieza con 09)
+    const telefonoInput = document.getElementById('telefono-input');
+    const telefonoError = document.getElementById('telefono-error');
+    
+    if (telefonoInput) {
+        telefonoInput.addEventListener('input', function(e) {
+            // Eliminar caracteres no numéricos
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Limitar a 10 dígitos
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
+            
+            e.target.value = value;
+            
+            // Validar en tiempo real
+            if (value.length > 0) {
+                if (value.length < 10) {
+                    telefonoError.textContent = 'El teléfono debe tener 10 dígitos';
+                    telefonoError.style.display = 'block';
+                    e.target.style.borderColor = 'var(--color-danger)';
+                } else if (!value.startsWith('09')) {
+                    telefonoError.textContent = 'El celular ecuatoriano debe empezar con 09';
+                    telefonoError.style.display = 'block';
+                    e.target.style.borderColor = 'var(--color-danger)';
+                } else {
+                    telefonoError.style.display = 'none';
+                    e.target.style.borderColor = '#28a745'; // Verde para válido
+                }
+            } else {
+                telefonoError.style.display = 'none';
+                e.target.style.borderColor = '';
+            }
+        });
+    }
+    
+    // Validación de Teléfonos de Referencia - Celular Ecuador (10 dígitos, empieza con 09)
+    const telefonosReferencia = document.querySelectorAll('.telefono-referencia');
+    
+    telefonosReferencia.forEach(function(input, index) {
+        const errorDiv = document.getElementById(`ref-${index}-telefono-error`);
+        
+        input.addEventListener('input', function(e) {
+            // Eliminar caracteres no numéricos
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Limitar a 10 dígitos
+            if (value.length > 10) {
+                value = value.substring(0, 10);
+            }
+            
+            e.target.value = value;
+            
+            // Validar en tiempo real
+            if (value.length > 0) {
+                if (value.length < 10) {
+                    if (errorDiv) {
+                        errorDiv.textContent = 'Debe tener 10 dígitos';
+                        errorDiv.style.display = 'block';
+                    }
+                    e.target.style.borderColor = 'var(--color-danger)';
+                } else if (!value.startsWith('09')) {
+                    if (errorDiv) {
+                        errorDiv.textContent = 'Debe empezar con 09';
+                        errorDiv.style.display = 'block';
+                    }
+                    e.target.style.borderColor = 'var(--color-danger)';
+                } else {
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+                    e.target.style.borderColor = '#28a745'; // Verde para válido
+                }
+            } else {
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+                e.target.style.borderColor = '';
+            }
+        });
+    });
+    
+    // Prevenir envío del formulario si hay errores de validación
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let hasErrors = false;
+            
+            // Validar cédula
+            if (cedulaInput && cedulaInput.value.length !== 10) {
+                cedulaError.textContent = 'La cédula debe tener exactamente 10 dígitos';
+                cedulaError.style.display = 'block';
+                cedulaInput.style.borderColor = 'var(--color-danger)';
+                hasErrors = true;
+            }
+            
+            // Validar teléfono principal
+            if (telefonoInput && telefonoInput.value.length > 0) {
+                if (telefonoInput.value.length !== 10 || !telefonoInput.value.startsWith('09')) {
+                    telefonoError.textContent = 'Ingrese un celular ecuatoriano válido (10 dígitos, empieza con 09)';
+                    telefonoError.style.display = 'block';
+                    telefonoInput.style.borderColor = 'var(--color-danger)';
+                    hasErrors = true;
+                }
+            }
+            
+            // Validar teléfonos de referencia si tienen valores
+            telefonosReferencia.forEach(function(input, index) {
+                if (input.value.length > 0) {
+                    if (input.value.length !== 10 || !input.value.startsWith('09')) {
+                        const errorDiv = document.getElementById(`ref-${index}-telefono-error`);
+                        if (errorDiv) {
+                            errorDiv.textContent = 'Teléfono inválido';
+                            errorDiv.style.display = 'block';
+                        }
+                        input.style.borderColor = 'var(--color-danger)';
+                        hasErrors = true;
+                    }
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert('Por favor corrija los errores en el formulario antes de enviar.');
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.error-message {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-control {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(242, 165, 23, 0.1);
+}
+</style>
+
+{% endblock %}

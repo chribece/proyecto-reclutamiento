@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Candidatos - GF {% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header con título y botón nuevo -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 style="color: var(--color-dark);">
+            <i class="fas fa-users" style="color: var(--color-primary);"></i>
+            Base de Candidatos
+        </h1>
+        <a href="{{ url_for('nuevo_candidato') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Nuevo Candidato
+        </a>
+    </div>
+
+    <!-- Barra de búsqueda y filtros -->
+    <div class="search-box">
+        <form method="GET" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <!-- Input de búsqueda con valor persistente -->
+            <input type="text" 
+                   name="busqueda" 
+                   value="{{ busqueda }}" 
+                   class="form-control" 
+                   placeholder="🔍 Buscar por nombre, email o habilidades..."
+                   style="min-width: 250px; flex: 1;">
+            
+            <!-- Filtro de disponibilidad -->
+            {{ form_busqueda.disponibilidad(class="form-control form-select", value=disponibilidad, style="min-width: 180px;") }}
+            
+            <!-- Botones de acción -->
+            <button type="submit" class="btn btn-secondary">Filtrar</button>
+            <a href="{{ url_for('lista_candidatos', activo=0 if activo else 1) }}" class="btn btn-secondary">
+                {{ 'Ver Inactivos' if activo else 'Ver Activos' }}
+            </a>
+            {% if busqueda or disponibilidad %}
+            <a href="{{ url_for('lista_candidatos', activo=1 if activo else 0) }}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Limpiar
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Tabla de candidatos -->
+    <div class="card">
+        <div class="table-container">
+            <table class="table" id="tabla-candidatos">
+                <thead>
+                    <tr>
+                        <th>Candidato</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidato in candidatos %}
+                    <tr>
+                        <td>
+                            <strong>{{ candidato.nombre_completo }}</strong>
+                            <br><small style="color: #666;">{{ candidato.nivel_educativo or 'Sin especificar' }}</small>
+                        </td>
+                        <td>
+                            <a href="mailto:{{ candidato.email }}" style="color: var(--color-dark);">
+                                <i class="fas fa-envelope"></i> {{ candidato.email }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if candidato.telefono %}
+                            <span style="color: var(--color-dark);">
+                                <i class="fas fa-phone"></i> {{ candidato.telefono }}
+                            </span>
+                            {% else %}
+                            <span style="color: #999; font-style: italic;">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('detalle_candidato', cedula=candidato.cedula) }}" 
+                               class="btn btn-sm btn-secondary" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if current_user.rol_nombre in ['admin', 'reclutador'] %}
+                            <a href="{{ url_for('editar_candidato', cedula=candidato.cedula) }}" 
+                               class="btn btn-sm btn-secondary" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                            
+                            <!-- Botones de activar/desactivar para admin y reclutador -->
+                            {% if current_user.rol_nombre in ['admin', 'reclutador'] %}
+                                {% if candidato.activo %}
+                                    <form method="POST" action="{{ url_for('desactivar_candidato', cedula=candidato.cedula) }}" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('¿Estás seguro de desactivar este candidato?')">
+                                        <button type="submit" class="btn btn-sm btn-warning" title="Desactivar">
+                                            <i class="fas fa-toggle-on"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('activar_candidato', cedula=candidato.cedula) }}" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('¿Estás seguro de activar este candidato?')">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Activar">
+                                            <i class="fas fa-toggle-off"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                            
+                            <!-- Botón de eliminar solo para admin -->
+                            {% if current_user.rol_nombre == 'admin' %}
+                                <form method="POST" action="{{ url_for('eliminar_candidato', cedula=candidato.cedula) }}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('¿Estás seguro de ELIMINAR PERMANENTEMENTE este candidato y todos sus datos? Esta acción no se puede deshacer.')">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 3rem; color: #999;">
+                            <i class="fas fa-user-slash" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                            No hay candidatos registrados con estos filtros
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Paginación -->
+    {% if total_pages > 1 %}
+    <div style="display: flex; justify-content: center; align-items: center; margin-top: 2rem; gap: 1rem; flex-wrap: wrap;">
+        
+        <!-- Info de registros -->
+        <span style="color: #666; font-size: 0.9rem;">
+            Mostrando {{ candidatos|length }} de {{ total }} candidatos
+        </span>
+        
+        <nav>
+            <ul class="pagination" style="display: flex; list-style: none; padding: 0; margin: 0; gap: 0.5rem; flex-wrap: wrap;">
+                
+                <!-- Botón Anterior -->
+                {% if has_prev %}
+                <li>
+                    <a href="{{ url_for('lista_candidatos', page=prev_num, activo=1 if activo else 0, busqueda=busqueda, disponibilidad=disponibilidad) }}" 
+                       class="btn btn-sm btn-secondary" style="text-decoration: none;">
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </a>
+                </li>
+                {% endif %}
+                
+                <!-- Números de página con lógica de puntos suspensivos -->
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                    <!-- Página actual -->
+                    <li>
+                        <span class="btn btn-sm btn-primary" style="cursor: default; font-weight: 600;">
+                            {{ p }}
+                        </span>
+                    </li>
+                    {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+                    <!-- Páginas visibles -->
+                    <li>
+                        <a href="{{ url_for('lista_candidatos', page=p, activo=1 if activo else 0, busqueda=busqueda, disponibilidad=disponibilidad) }}" 
+                           class="btn btn-sm btn-secondary" style="text-decoration: none;">
+                            {{ p }}
+                        </a>
+                    </li>
+                    {% elif p == 4 or p == total_pages - 3 %}
+                    <!-- Puntos suspensivos -->
+                    <li>
+                        <span style="padding: 0.5rem 0.75rem; color: #666;">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                <!-- Botón Siguiente -->
+                {% if has_next %}
+                <li>
+                    <a href="{{ url_for('lista_candidatos', page=next_num, activo=1 if activo else 0, busqueda=busqueda, disponibilidad=disponibilidad) }}" 
+                       class="btn btn-sm btn-secondary" style="text-decoration: none;">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <!-- Info de página actual -->
+        <span style="color: #666; font-size: 0.9rem;">
+            Página {{ page }} de {{ total_pages }}
+        </span>
+    </div>
+    {% elif candidatos %}
+    <!-- Mensaje cuando hay datos pero solo 1 página -->
+    <div style="text-align: center; margin-top: 1rem; color: #666;">
+        Mostrando {{ total }} candidato{{ 's' if total != 1 else '' }}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Script para búsqueda en tiempo real (opcional) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const busquedaInput = document.querySelector('input[name="busqueda"]');
+    if (busquedaInput) {
+        let timeout;
+        busquedaInput.addEventListener('input', function(e) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                // Submit del formulario padre
+                e.target.closest('form')?.requestSubmit();
+            }, 500); // Espera 500ms después de dejar de escribir
+        });
+    }
+});
+</script>
+{% endblock %}

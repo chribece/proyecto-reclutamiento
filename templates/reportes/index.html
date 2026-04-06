@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes RRHH - GF{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width: 1200px; margin: 0 auto;">
+    <h1 style="color: var(--color-dark); margin-bottom: 1.5rem;">
+        <i class="fas fa-file-pdf" style="color: var(--color-primary);"></i>
+        Reportes para Recursos Humanos
+    </h1>
+
+    <div class="row">
+        <!-- Reporte de Candidatos -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-users"></i>
+                        Reporte de Candidatos
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Genera un reporte detallado de candidatos con su información personal, 
+                        experiencia educativa y laboral. Puedes filtrar por vacante específica 
+                        u obtener todos los candidatos activos.
+                    </p>
+                    
+                    <form method="POST" action="{{ url_for('reporte_candidatos_pdf') }}">
+                        <div class="form-group mb-3">
+                            <label for="cargo_id" class="form-label">Filtrar por Vacante (Opcional)</label>
+                            <select name="cargo_id" id="cargo_id" class="form-control form-select">
+                                <option value="">Todos los candidatos activos</option>
+                                {% for cargo in cargos %}
+                                <option value="{{ cargo.id_cargo }}">
+                                    {{ cargo.nombre }} - {{ cargo.departamento }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                Deja en blanco para incluir todos los candidatos activos
+                            </small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-download"></i>
+                            Generar Reporte PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte de Estadísticas -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Reporte de Estadísticas
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Genera un reporte con estadísticas detalladas de postulaciones, 
+                        incluyendo distribución por estado, por cargo y tendencias mensuales.
+                    </p>
+                    
+                    <form method="POST" action="{{ url_for('reporte_estadisticas_pdf') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                                    <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control">
+                                    <small class="text-muted">Opcional</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                                    <input type="date" name="fecha_fin" id="fecha_fin" class="form-control">
+                                    <small class="text-muted">Opcional</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-download"></i>
+                            Generar Reporte PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información Adicional -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-info-circle"></i>
+                        Información de los Reportes
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-users text-primary"></i> Reporte de Candidatos</h5>
+                            <ul>
+                                <li>Información personal: cédula, nombre, email, teléfono</li>
+                                <li>Datos profesionales: ubicación, educación, experiencia</li>
+                                <li>Información de postulación: cargo, departamento, estado</li>
+                                <li>Resumen estadístico: total por nivel educativo</li>
+                                <li>Experiencia promedio del grupo</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-chart-bar text-success"></i> Reporte de Estadísticas</h5>
+                            <ul>
+                                <li>Distribución de postulaciones por estado</li>
+                                <li>Postulaciones por cargo y departamento</li>
+                                <li>Tendencia mensual (últimos 12 meses)</li>
+                                <li>Porcentajes y totales</li>
+                                <li>Análisis de períodos específicos</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Tip:</strong> Los reportes se generan en formato PDF y pueden ser descargados 
+                        directamente para compartir o imprimir. Los archivos incluyen fecha y hora de generación 
+                        para control de versiones.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Establecer fechas por defecto (último mes)
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaFin = document.getElementById('fecha_fin');
+    const fechaInicio = document.getElementById('fecha_inicio');
+    
+    if (fechaFin && fechaInicio) {
+        // Fecha fin: hoy
+        const hoy = new Date();
+        fechaFin.value = hoy.toISOString().split('T')[0];
+        
+        // Fecha inicio: hace un mes
+        const haceUnMes = new Date();
+        haceUnMes.setMonth(haceUnMes.getMonth() - 1);
+        fechaInicio.value = haceUnMes.toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}

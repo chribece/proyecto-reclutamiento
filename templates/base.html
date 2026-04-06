@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Reclutamiento RRHH{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo-GF.ico') }}">
+<link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/logo-GF.png') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('index') }}" class="navbar-brand">
+                <img src="{{ url_for('static', filename='img/logo-GF.png') }}" 
+                    alt="Logo GF" 
+                    style="height: 40px; width: auto; margin-right: 10px;">
+                REPUESTOS AUTOMOTRICES
+            </a>
+            <ul class="navbar-nav">
+              
+                
+                <!-- Menu para candidatos -->
+                {% if current_user.is_authenticated and current_user.rol_nombre == 'candidato' %}
+                    <li><a href="{{ url_for('cargos_candidato') }}"><i class="fas fa-briefcase"></i> Vacantes Disponibles</a></li>
+                    <li><a href="{{ url_for('mis_postulaciones') }}"><i class="fas fa-file-alt"></i> Mis Postulaciones</a></li>
+                    <li><a href="{{ url_for('actualizar_perfil_candidato') }}"><i class="fas fa-user-edit"></i> Actualizar Perfil</a></li>
+             
+             
+                <!-- Menu para admin, reclutador y gerente -->
+                {% elif current_user.is_authenticated and current_user.rol_nombre in ['admin', 'reclutador', 'gerente'] %}
+                    <li><a href="{{ url_for('lista_cargos') }}"><i class="fas fa-briefcase"></i> Vacantes</a></li>
+                    <li><a href="{{ url_for('lista_candidatos') }}"><i class="fas fa-users"></i> Candidatos</a></li>
+                    <li><a href="{{ url_for('lista_postulaciones') }}"><i class="fas fa-clipboard-list"></i> Postulaciones</a></li>
+                    <li><a href="{{ url_for('reportes') }}"><i class="fas fa-file-pdf"></i> Reportes</a></li>
+                    
+                    <!-- Opciones solo para administradores -->
+                    {% if current_user.rol_nombre == 'admin' %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <i class="fas fa-cogs"></i> Administración
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url_for('lista_usuarios') }}"><i class="fas fa-users-cog"></i> Gestión de Usuarios</a></li>
+                            <li><a href="{{ url_for('crear_usuario_admin') }}"><i class="fas fa-user-plus"></i> Crear Usuario</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            <div class="navbar-user">
+                {% if current_user.is_authenticated %}
+                    <span class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        {{ current_user.nombre_usuario }}
+                        <span class="role-badge">{{ current_user.rol_nombre | upper }}</span>
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} fade-in">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'info-circle' }}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 VCore Tech - Sistema de Reclutamiento. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

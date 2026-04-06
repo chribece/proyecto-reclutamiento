@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - GF{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width: 700px; margin: 0 auto;">
+    <h1 style="color: var(--color-dark); margin-bottom: 1.5rem;">
+        <i class="fas fa-plus-circle" style="color: var(--color-primary);"></i>
+        {{ titulo }}
+    </h1>
+
+    <div class="card">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                
+                {{ form.candidato_cedula.label(class="form-label") }}
+                {{ form.candidato_cedula(class="form-control", placeholder="Ej: 1712345678") }}
+                
+                {% if form.candidato_cedula.errors %}
+                    <span style="color: var(--color-danger);">{{ form.candidato_cedula.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.cargo_id.label(class="form-label") }}
+                {{ form.cargo_id(class="form-control form-select") }}
+                {% if form.cargo_id.errors %}
+                    <span style="color: var(--color-danger);">{{ form.cargo_id.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    {{ form.estado.label(class="form-label") }}
+                    {{ form.estado(class="form-control form-select") }}
+                </div>
+                <div class="form-group">
+                    {{ form.fuente_reclutamiento.label(class="form-label") }}
+                    {{ form.fuente_reclutamiento(class="form-control form-select") }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.puntaje_evaluacion.label(class="form-label") }}
+                {{ form.puntaje_evaluacion(class="form-control", type="number", min="1", max="10") }}
+                <small style="color: #666;">Escala del 1 al 10</small>
+            </div>
+
+            <div class="form-group">
+                {{ form.notas.label(class="form-label") }}
+                {{ form.notas(class="form-control", rows="4", placeholder="Observaciones sobre el candidato...") }}
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Postulación
+                </button>
+                <a href="{{ url_for('lista_postulaciones') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

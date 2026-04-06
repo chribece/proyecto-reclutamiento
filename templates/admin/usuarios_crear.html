@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Usuario - Administración{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-plus"></i> 
+                        Crear Nuevo Usuario
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Nota:</strong> Como administrador, puedes crear usuarios con cualquier rol. 
+                            Los usuarios creados desde el formulario público siempre serán candidatos.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.email.label(class="form-label") }}
+                                    {% if form.email.errors %}
+                                        {{ form.email(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.email.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.email(class="form-control", placeholder="usuario@ejemplo.com") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.rol.label(class="form-label") }}
+                                    {% if form.rol.errors %}
+                                        {{ form.rol(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.rol.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.rol(class="form-control") }}
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-shield-alt"></i> 
+                                        Selecciona el rol que tendrá este usuario en el sistema
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.password.label(class="form-label") }}
+                                    {% if form.password.errors %}
+                                        {{ form.password(class="form-control is-invalid", type="password") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.password(class="form-control", placeholder="Contraseña segura", type="password") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.password_confirm.label(class="form-label") }}
+                                    {% if form.password_confirm.errors %}
+                                        {{ form.password_confirm(class="form-control is-invalid", type="password") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password_confirm.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.password_confirm(class="form-control", placeholder="Confirmar contraseña", type="password") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Advertencia de Seguridad:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Solo los administradores pueden crear otros administradores</li>
+                                <li>Todos los cambios son registrados en el log de auditoría</li>
+                                <li>Las contraseñas se almacenan de forma encriptada</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Crear Usuario
+                            </button>
+                            <a href="{{ url_for('lista_usuarios') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

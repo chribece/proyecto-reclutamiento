@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Postulaciones{% endblock %}
+
+{% block content %}
+<div class="mis-postulaciones-container">
+    <div class="page-header">
+        <h1><i class="fas fa-file-alt"></i> Mis Postulaciones</h1>
+        <p>Revisa el estado de todas tus postulaciones</p>
+    </div>
+
+    {% if postulaciones %}
+    <div class="postulaciones-lista">
+        {% for post in postulaciones %}
+        <div class="postulacion-card">
+            <!-- DEBUG: {{ post.estado }} -->
+            <div class="postulacion-main">
+                <div class="postulacion-titulo">
+                    <h3>{{ post.cargo_nombre }}</h3>
+                    <span class="estado-badge estado-{{ post.estado | lower | replace(' ', '-') | replace('rrhh', 'rrhh') }}">
+                        {{ post.estado }}
+                    </span>
+                </div>
+
+                <div class="postulacion-info">
+                    <div class="info-item">
+                        <label>Estado de Candidatura:</label>
+                        <p>{{ post.estado }}</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Fecha de Postulación:</label>
+                        <p>{{ post.fecha_postulacion | default('N/A') }}</p>
+                    </div>
+                    {% if post.puntaje_evaluacion %}
+                    <div class="info-item">
+                        <label>Puntaje de Evaluación:</label>
+                        <p>{{ post.puntaje_evaluacion }}/100</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="postulacion-notas">
+                {% if post.notas %}
+                <div class="notas">
+                    <label>Observaciones:</label>
+                    <p>{{ post.notas }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="timeline-estado">
+                {% set estado_actual = post.estado|string %}
+                <div class="timeline-item {% if estado_actual == 'Recibido' %}active{% endif %}">
+                    <div class="timeline-marker"></div>
+                    <span>Recibido</span>
+                </div>
+                <div class="timeline-item {% if estado_actual == 'En revision' %}active{% endif %}">
+                    <div class="timeline-marker"></div>
+                    <span>En revisión</span>
+                </div>
+                <div class="timeline-item {% if estado_actual == 'Entrevista tecnica' %}active{% endif %}">
+                    <div class="timeline-marker"></div>
+                    <span>Entrevista técnica</span>
+                </div>
+                <div class="timeline-item {% if estado_actual == 'Entrevista RRHH' %}active{% endif %}">
+                    <div class="timeline-marker"></div>
+                    <span>Entrevista RRHH</span>
+                </div>
+                <div class="timeline-item {% if estado_actual == 'Oferta' %}active{% endif %}">
+                    <div class="timeline-marker"></div>
+                    <span>Oferta</span>
+                </div>
+                <div class="timeline-item {% if estado_actual == 'Contratado' %}active{% endif %}">
+                    <div class="timeline-marker"></div>
+                    <span>Contratado</span>
+                </div>
+                <div class="timeline-item {% if estado_actual in ['Rechazado', 'Descartado'] %}active{% endif %}">
+                    <div class="timeline-marker"></div>
+                    <span>{{ 'Rechazado' if estado_actual == 'Rechazado' else 'Descartado' }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <p>Aún no te has postulado a ningúna vacante. ¡Explora las vacantes disponibles!</p>
+        <a href="{{ url_for('cargos_candidato') }}" class="btn btn-primary">
+            <i class="fas fa-briefcase"></i> Ver Vacantes Disponibles
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="page-footer">
+        <a href="{{ url_for('cargos_candidato') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a Vacantes
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+.mis-postulaciones-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    border-radius: 12px;
+    color: white;
+}
+
+.page-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.page-header p {
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.postulaciones-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.postulacion-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid var(--color-primary);
+}
+
+.postulacion-main {
+    margin-bottom: 1.5rem;
+}
+
+.postulacion-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.postulacion-titulo h3 {
+    margin: 0;
+    color: var(--color-dark);
+    font-size: 1.3rem;
+}
+
+.estado-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.estado-recibido {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.estado-en-revision {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.estado-entrevista-tecnica,
+.estado-entrevista-rrhh {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.estado-oferta {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.estado-contratado {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.estado-rechazado,
+.estado-descartado {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+.postulacion-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-item label {
+    display: block;
+    font-weight: 600;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.info-item p {
+    margin: 0;
+    color: var(--color-dark);
+}
+
+.postulacion-notas {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.notas label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+}
+
+.notas p {
+    margin: 0;
+    color: #555;
+    line-height: 1.6;
+}
+
+.timeline-estado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #eee;
+    position: relative;
+}
+
+.timeline-estado::before {
+    content: '';
+    position: absolute;
+    top: calc(50% - 15px);
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #ddd;
+    z-index: 0;
+}
+
+.timeline-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    flex: 1;
+}
+
+.timeline-marker {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+.timeline-item.active .timeline-marker {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(242, 165, 23, 0.2);
+    transform: scale(1.1);
+}
+
+.timeline-item.active span {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.timeline-item span {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 600;
+}
+
+
+.alert {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    padding: 1.5rem;
+    border-radius: 8px;
+    color: #2e7d32;
+    text-align: center;
+}
+
+.alert i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.alert p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: white;
+    margin-top: 1rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(242, 165, 23, 0.3);
+}
+
+.btn-secondary {
+    background: var(--color-light);
+    color: var(--color-dark);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+.page-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #eee;
+}
+
+@media (max-width: 768px) {
+    .postulacion-titulo {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .timeline-estado {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .timeline-estado::before {
+        display: none;
+    }
+    
+    .page-footer {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

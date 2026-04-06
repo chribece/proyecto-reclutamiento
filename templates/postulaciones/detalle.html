@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Postulación #{{ postulacion.id_postulacion }} - GF{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 style="color: var(--color-dark);">
+            <i class="fas fa-clipboard-check" style="color: var(--color-primary);"></i>
+            Detalle de Postulación #{{ postulacion.id_postulacion }}
+        </h1>
+        <div style="display: flex; gap: 0.5rem;">
+        
+            {% if siguientes_estados %}
+            <div style="position: relative;">
+                <select class="form-control form-select" 
+                        data-postulacion-id="{{ postulacion.id_postulacion }}"
+                        onchange="cambiarEstadoHandler(this)">
+                    <option value="">Cambiar estado...</option>
+                    {% for estado in siguientes_estados %}
+                    <option value="{{ estado }}">→ {{ estado }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <script>
+            function cambiarEstadoHandler(select) {
+                var postulacionId = select.getAttribute('data-postulacion-id');
+                var nuevoEstado = select.value;
+                if (nuevoEstado) {
+                    App.cambiarEstado(postulacionId, nuevoEstado);
+                }
+            }
+            </script>
+            {% endif %}
+            <form action="{{ url_for('eliminar_postulacion', id=postulacion.id_postulacion) }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn btn-danger" data-confirm="¿Eliminar esta postulación?">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+
+
+
+    </div>
+
+    <!-- Pipeline Visual -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        {% if postulacion.estado in ['Rechazado', 'Descartado'] %}
+        <!-- Mostrar mensaje especial para estados finales -->
+        <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #dc3545;">
+            <i class="fas fa-times-circle" style="font-size: 2rem; color: #dc3545; margin-bottom: 1rem;"></i>
+            <h4 style="color: #dc3545; margin-bottom: 0.5rem;">Postulación {{ postulacion.estado }}</h4>
+            <p style="color: #666; margin: 0;">Esta postulación ha sido {{ postulacion.estado.lower() }} del proceso de selección.</p>
+        </div>
+        {% else %}
+        <!-- Pipeline normal para estados activos -->
+        <div class="pipeline">
+            {% set estados_pipeline = ['Recibido', 'En revision', 'Entrevista tecnica', 'Entrevista RRHH', 'Oferta', 'Contratado'] %}
+            {% for estado in estados_pipeline %}
+            <div class="pipeline-step 
+                {% if postulacion.estado == estado %}active{% endif %}
+                {% if estados_pipeline.index(estado) < estados_pipeline.index(postulacion.estado) %}completed{% endif %}">
+                <div class="pipeline-dot">
+                    {% if estados_pipeline.index(estado) < estados_pipeline.index(postulacion.estado) %}
+                    <i class="fas fa-check"></i>
+                    {% else %}
+                    {{ loop.index }}
+                    {% endif %}
+                </div>
+                <div class="pipeline-label">{{ estado }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user"></i> Candidato
+                </h3>
+            </div>
+            {% if postulacion.candidato %}
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); 
+                            border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: bold;">
+                    {{ postulacion.candidato.nombre[0] }}{{ postulacion.candidato.apellido[0] }}
+                </div>
+                <div>
+                    <h4 style="margin: 0;">{{ postulacion.candidato.nombre_completo }}</h4>
+                    <p style="margin: 0; color: #666;">{{ postulacion.candidato.email }}</p>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="{{ url_for('detalle_candidato', cedula=postulacion.cedula) }}" class="btn btn-secondary" style="justify-content: center;">
+                    Ver Perfil Completo
+                </a>
+            </div>
+            {% else %}
+            <p style="color: #999;">Información no disponible</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-briefcase"></i> Cargo
+                </h3>
+            </div>
+            {% if postulacion.cargo %}
+            <h4 style="margin-bottom: 0.5rem;">{{ postulacion.cargo.nombre }}</h4>
+            <p style="color: #666; margin-bottom: 1rem;">
+                <i class="fas fa-building"></i> {{ postulacion.cargo.departamento }}<br>
+                <i class="fas fa-map-marker-alt"></i> {{ postulacion.cargo.direccion_domicilio or 'No especificada' }}
+            </p>
+            <div style="background: #f5f5f5; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                <small style="color: #666;">{{ postulacion.cargo.descripcion[:150] }}...</small>
+            </div>
+            {% else %}
+            <p style="color: #999;">Información no disponible</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 class="card-title">Información de la Postulación</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
+            <div>
+                <h4 style="color: var(--color-secondary); margin-bottom: 0.5rem;">Estado Actual</h4>
+                <span class="badge badge-{{ postulacion.estado.lower().replace(' ', '-') }}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                    {{ postulacion.estado }}
+                </span>
+            </div>
+            <div>
+                <h4 style="color: var(--color-secondary); margin-bottom: 0.5rem;">Fuente</h4>
+                <p>{{ postulacion.fuente_reclutamiento or 'No especificada' }}</p>
+            </div>
+            <div>
+                <h4 style="color: var(--color-secondary); margin-bottom: 0.5rem;">Puntaje</h4>
+                {% if postulacion.puntaje_evaluacion %}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);">
+                        {{ postulacion.puntaje_evaluacion }}/10
+                    </span>
+                    {% if postulacion.puntaje_evaluacion >= 8 %}
+                    <div style="flex: 1; height: 8px; background: #28a745; border-radius: 4px; overflow: hidden;"></div>
+                    {% elif postulacion.puntaje_evaluacion >= 6 %}
+                    <div style="flex: 1; height: 8px; background: #ffc107; border-radius: 4px; overflow: hidden;"></div>
+                    {% elif postulacion.puntaje_evaluacion >= 4 %}
+                    <div style="flex: 1; height: 8px; background: #fd7e14; border-radius: 4px; overflow: hidden;"></div>
+                    {% else %}
+                    <div style="flex: 1; height: 8px; background: #dc3545; border-radius: 4px; overflow: hidden;"></div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <span style="color: #999; font-style: italic;">Sin evaluar</span>
+                {% endif %}
+            </div>
+            <div>
+                <h4 style="color: var(--color-secondary); margin-bottom: 0.5rem;">Fecha de Postulación</h4>
+                <p>{{ formatear_fecha(postulacion.fecha_postulacion) }}</p>
+            </div>
+        </div>
+        
+        {% if postulacion.notas %}
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #eee;">
+            <h4 style="color: var(--color-secondary); margin-bottom: 0.5rem;">Notas</h4>
+            <p style="line-height: 1.8;">{{ postulacion.notas }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Formulario para editar notas y puntaje -->
+    {% if current_user.rol_nombre in ['admin', 'reclutador', 'gerente'] %}
+    <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-edit"></i> Editar Información
+            </h3>
+        </div>
+        <form action="{{ url_for('editar_postulacion', id=postulacion.id_postulacion) }}" method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <h4 style="color: var(--color-secondary); margin-bottom: 0.5rem;">Notas Adicionales</h4>
+                    <textarea name="notas" rows="4" class="form-control" placeholder="Agregar notas sobre esta postulación...">{{ postulacion.notas or '' }}</textarea>
+                    <small style="color: #666; margin-top: 0.25rem; display: block;">
+                        Puedes agregar comentarios, observaciones o seguimiento del candidato
+                    </small>
+                </div>
+                <div>
+                    <h4 style="color: var(--color-secondary); margin-bottom: 0.5rem;">Puntaje de Evaluación</h4>
+                    <input type="number" name="puntaje_evaluacion" class="form-control" 
+                           min="1" max="10" step="0.5" 
+                           value="{{ postulacion.puntaje_evaluacion or '' }}"
+                           placeholder="1-10">
+                    <small style="color: #666; margin-top: 0.25rem; display: block;">
+                        Calificación del 1 al 10 (puedes usar decimales como 7.5)
+                    </small>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; text-align: right;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+                <a href="{{ url_for('detalle_postulacion', id=postulacion.id_postulacion) }}" class="btn btn-secondary" style="margin-left: 0.5rem;">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

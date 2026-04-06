@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Acerca de - TalentHub{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width: 800px; margin: 0 auto;">
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); 
+                    border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-briefcase" style="font-size: 3rem; color: var(--color-dark);"></i>
+        </div>
+        
+        <h1 style="color: var(--color-dark); margin-bottom: 1rem;">GF</h1>
+        <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+            Sistema de Gestión de Reclutamiento y Selección de Talento
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin: 3rem 0; text-align: left;">
+            <div class="card" style="text-align: center;">
+                <i class="fas fa-code" style="font-size: 2rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+                <h3>Flask + Jinja2</h3>
+                <p style="color: #666; font-size: 0.9rem;">Framework Python robusto y flexible</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <i class="fas fa-database" style="font-size: 2rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+                <h3>SQLite</h3>
+                <p style="color: #666; font-size: 0.9rem;">Base de datos ligera y eficiente</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+                <h3>Flask-WTF</h3>
+                <p style="color: #666; font-size: 0.9rem;">Validación y seguridad de formularios</p>
+            </div>
+        </div>
+
+        <div style="background: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--color-dark);">Características Principales</h3>
+            <ul style="list-style: none; text-align: left; display: inline-block;">
+                <li style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: var(--color-success); margin-right: 0.5rem;"></i> Gestión completa de cargos y posiciones</li>
+                <li style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: var(--color-success); margin-right: 0.5rem;"></i> Base de datos de candidatos con búsqueda avanzada</li>
+                <li style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: var(--color-success); margin-right: 0.5rem;"></i> Pipeline de postulaciones con estados personalizables</li>
+                <li style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: var(--color-success); margin-right: 0.5rem;"></i> Dashboard con métricas y estadísticas</li>
+                <li style="margin: 0.5rem 0;"><i class="fas fa-check" style="color: var(--color-success); margin-right: 0.5rem;"></i> Arquitectura POO con colecciones optimizadas</li>
+            </ul>
+        </div>
+
+        <p style="margin-top: 2rem; color: #999; font-size: 0.9rem;">
+            Versión 1.0 | Desarrollado con <i class="fas fa-heart" style="color: var(--color-danger);"></i> para RRHH
+        </p>
+    </div>
+</div>
+{% endblock %}

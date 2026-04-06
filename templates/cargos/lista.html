@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Vacantes - GF{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 style="color: var(--color-dark);">
+            <i class="fas fa-briefcase" style="color: var(--color-primary);"></i>
+            Gestión de Vacantes
+        </h1>
+        <a href="{{ url_for('nuevo_cargo') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Vacante
+        </a>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="busqueda-cargos" class="form-control" placeholder="🔍 Buscar vacantes...">
+        <select class="form-control form-select" style="width: auto;" onchange="window.location.href='?estado='+this.value">
+            <option value="">Todos los estados</option>
+            <option value="Activo" {% if estado_filtro == 'Activo' %}selected{% endif %}>Activo</option>
+            <option value="Pausado" {% if estado_filtro == 'Pausado' %}selected{% endif %}>Pausado</option>
+            <option value="Cerrado" {% if estado_filtro == 'Cerrado' %}selected{% endif %}>Cerrado</option>
+        </select>
+    </div>
+
+    <div class="card">
+        <div class="table-container">
+            <table class="table" id="tabla-cargos">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Departamento</th>
+                        <th>Tipo</th>
+                        <th>Ubicación</th>
+                        <th>Estado</th>
+                        <th>Postulaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cargo in cargos %}
+                    <tr>
+                        <td>
+                            <strong>{{ cargo.nombre }}</strong>
+                            {% if cargo.salario_minimo %}
+                            <br><small style="color: #666;">
+                                ${{ "{:,.0f}".format(cargo.salario_minimo) }} - ${{ "{:,.0f}".format(cargo.salario_maximo) }}
+                            </small>
+                            {% endif %}
+                        </td>
+                        <td>{{ cargo.departamento }}</td>
+                        <td>{{ cargo.tipo_contrato }}</td>
+                        <td>{{ cargo.nombre_sucursal or cargo.direccion_domicilio or 'No especificada' }}</td>
+                        <td>
+                            {% if cargo.estado == 'Activo' %}
+                            <span class="badge" style="background-color: #c8e6c9; color: #2e7d32;">
+                                {{ cargo.estado }}
+                            </span>
+                            {% elif cargo.estado == 'Pausado' %}
+                            <span class="badge" style="background-color: #fff3e0; color: #ef6c00;">
+                                {{ cargo.estado }}
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background-color: #ffcdd2; color: #c62828;">
+                                {{ cargo.estado }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <span style="background: var(--color-primary); color: var(--color-dark); 
+                                        padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: bold;">
+                                {{ cargo.get_postulaciones_count() }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if current_user.rol_nombre in ['admin', 'reclutador'] %}
+                            <a href="{{ url_for('editar_cargo', id=cargo.id_cargo) }}" class="btn btn-sm btn-secondary" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                            
+                            <!-- Botones de activar/desactivar para admin y reclutador -->
+                            {% if current_user.rol_nombre in ['admin', 'reclutador'] %}
+                                {% if cargo.estado == 'Activo' %}
+                                    <form method="POST" action="{{ url_for('desactivar_cargo', id=cargo.id_cargo) }}" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('¿Estás seguro de desactivar esta vacante?')">
+                                        <button type="submit" class="btn btn-sm btn-warning" title="Desactivar">
+                                            <i class="fas fa-toggle-on"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('activar_cargo', id=cargo.id_cargo) }}" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('¿Estás seguro de activar esta vacante?')">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Activar">
+                                            <i class="fas fa-toggle-off"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                            
+                            <!-- Botón de eliminar solo para admin -->
+                            {% if current_user.rol_nombre == 'admin' %}
+                                <form method="POST" action="{{ url_for('eliminar_cargo', id=cargo.id_cargo) }}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('¿Estás seguro de ELIMINAR PERMANENTEMENTE esta vacante? Esta acción no se puede deshacer.')">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: #999;">
+                            <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                            No hay cargos registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+
+
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

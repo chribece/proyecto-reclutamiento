@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Sistema de Reclutamiento{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fas fa-sign-in-alt"></i>
+            <h1>Iniciar Sesión</h1>
+            <p>Accede a tu cuenta</p>
+        </div>
+
+        <form method="POST" class="auth-form" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.email.label(class="form-label") }}
+                {% if form.email.errors %}
+                    {{ form.email(class="form-control is-invalid", type="text") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}
+                            <i class="fas fa-times-circle"></i> {{ error }}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.email(class="form-control", placeholder="Tu correo o nombre de usuario", type="text") }}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                {% if form.password.errors %}
+                    {{ form.password(class="form-control is-invalid", type="password") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.password.errors %}
+                            <i class="fas fa-times-circle"></i> {{ error }}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.password(class="form-control", placeholder="Tu contraseña", type="password") }}
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">
+                <i class="fas fa-sign-in-alt"></i> Ingresar
+            </button>
+        </form>
+
+        <div class="auth-divider">o</div>
+
+        <div class="auth-footer">
+            <p>¿No tienes cuenta? <a href="{{ url_for('registro') }}">Regístrate aquí</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #f2a517 0%, #ef9120 100%);
+}
+
+.auth-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header i {
+    font-size: 2.5rem;
+    color: #f2a517;
+    margin-bottom: 0.5rem;
+}
+
+.auth-header h1 {
+    margin: 0.5rem 0;
+    color: #161930;
+    font-size: 1.8rem;
+}
+
+.auth-header p {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.auth-form {
+    margin: 1.5rem 0;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #161930;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #dcdde3;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #f2a517;
+    box-shadow: 0 0 0 3px rgba(242, 165, 23, 0.1);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #f2a517 0%, #ef9120 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(242, 165, 23, 0.3);
+}
+
+.btn-block {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.auth-divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+    color: #999;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.auth-divider {
+    position: relative;  
+    z-index: 1;
+}
+
+.auth-divider::after {
+    content: attr(data-text);
+}
+
+.auth-divider {
+    background: white;
+    padding: 0 1rem;
+}
+
+.auth-footer {
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.auth-footer p {
+    margin: 0;
+    color: #666;
+}
+
+.auth-footer a {
+    color: #f2a517;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.auth-footer a:hover {
+    color: #ef9120;
+}</style>
+{% endblock %}

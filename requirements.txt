@@ -1,0 +1,52 @@
+# Core Flask Framework
+Flask==3.1.3
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+Flask-SQLAlchemy==3.1.1
+
+# Database
+PyMySQL==1.1.2
+mysql-connector-python==9.6.0
+
+# Forms and Validation
+WTForms==3.2.1
+email-validator==2.3.0
+
+# Security and Utilities
+itsdangerous==2.2.0
+Werkzeug==3.1.6
+
+# Templates and Rendering
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+
+# Production Server
+gunicorn==21.2.0
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# PDF Generation (for reports)
+reportlab==4.4.10
+
+# Image Processing (for uploads)
+Pillow==12.1.1
+
+# Additional Utilities
+click==8.3.1
+colorama==0.4.6
+typing_extensions==4.15.0
+
+# SQLAlchemy Core
+SQLAlchemy==2.0.48
+
+# Concurrency
+greenlet==3.3.2
+
+# Network and DNS
+dnspython==2.8.0
+idna==3.11
+charset-normalizer==3.4.6
+
+# Notifications and Logging
+blinker==1.9.0

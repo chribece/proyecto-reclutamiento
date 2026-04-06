@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fade-in">
+    <h1 style="margin-bottom: 0.5rem; color: var(--color-dark);">
+        <i class="fas fa-chart-line" style="color: var(--color-primary);"></i>
+        Dashboard de Reclutamiento
+    </h1>
+    <p style="color: #666; margin-bottom: 2rem;">Resumen general del sistema de gestión de talento</p>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.cargos_activos }}</div>
+            <div class="stat-label">Vacantes Activas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_candidatos }}</div>
+            <div class="stat-label">Candidatos Registrados</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_postulaciones }}</div>
+            <div class="stat-label">Total Postulaciones</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color: var(--color-success);">
+                {{ stats.por_estado.get('Contratado', 0) }}
+            </div>
+            <div class="stat-label">Contrataciones Exitosas</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-clock" style="color: var(--color-primary);"></i>
+                Últimas Postulaciones
+            </h2>
+            <a href="{{ url_for('lista_postulaciones') }}" class="btn btn-sm btn-secondary">
+                Ver todas <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Candidato</th>
+                        <th>Cargo</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in stats.ultimas_postulaciones %}
+                    <tr>
+                        <td>
+                            <strong>{{ post.nombre }} {{ post.apellido }}</strong>
+                        </td>
+                        <td>{{ post.cargo_nombre }}</td>
+                        <td>
+                            <span class="badge badge-{{ post.estado.lower().replace(' ', '-') }}">
+                                {{ post.estado }}
+                            </span>
+                        </td>
+                        <td>{{ formatear_fecha(post.fecha_postulacion) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #999;">
+                            No hay postulaciones recientes
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Distribución por Estado</h3>
+            </div>
+            {% for estado, total in stats.por_estado.items() %}
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #eee;">
+                <span>{{ estado }}</span>
+                <span style="font-weight: bold; color: var(--color-primary);">{{ total }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Acciones Rápidas</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="{{ url_for('nuevo_cargo') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Publicar Nuevo Vacante
+                </a>
+                <a href="{{ url_for('nuevo_candidato') }}" class="btn btn-secondary">
+                    <i class="fas fa-user-plus"></i> Registrar Candidato
+                </a>
+                <a href="{{ url_for('nueva_postulacion') }}" class="btn btn-secondary">
+                    <i class="fas fa-paper-plane"></i> Nueva Postulación
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
