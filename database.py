@@ -76,11 +76,15 @@ class DatabaseManager:
                     )
                 ''')
             
-            # Insertar roles por defecto
-            cursor.execute("INSERT IGNORE INTO roles (nombre, descripcion) VALUES ('admin', 'Administrador del sistema')")
-            cursor.execute("INSERT IGNORE INTO roles (nombre, descripcion) VALUES ('reclutador', 'Reclutador')")
-            cursor.execute("INSERT IGNORE INTO roles (nombre, descripcion) VALUES ('gerente', 'Gerente de RRHH')")
-            cursor.execute("INSERT IGNORE INTO roles (nombre, descripcion) VALUES ('candidato', 'Candidato')")
+            # Insertar roles por defecto usando try/except para compatibilidad
+            try:
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('admin', 'Administrador del sistema')")
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('reclutador', 'Reclutador')")
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('gerente', 'Gerente de RRHH')")
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('candidato', 'Candidato')")
+            except (pymysql.err.IntegrityError, sqlite3.IntegrityError):
+                # Los roles ya existen, continuar
+                pass
             
             # Tabla Usuarios
             if self.use_mysql:

@@ -1,4 +1,5 @@
 import pymysql
+import sqlite3
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
@@ -47,24 +48,38 @@ class Usuario(UserMixin):
         return check_password_hash(self.password_hash, password)
     
     def save(self) -> int:
-        """Guarda o actualiza el usuario"""
+        """Guarda o actualiza el usuario con manejo de duplicados compatible MySQL/SQLite"""
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            if self.id_usuario:
-                cursor.execute('''
-                    UPDATE usuarios 
-                    SET nombre_usuario=%s, email=%s, password_hash=%s, 
-                        rol_id=%s, activo=%s, ultimo_acceso=NOW()
-                    WHERE id_usuario=%s
-                ''', (self.nombre_usuario, self.email, self.password_hash,
-                      self.rol_id, self.activo, self.id_usuario))
-                return self.id_usuario
-            else:
-                cursor.execute('''
-                    INSERT INTO usuarios (nombre_usuario, email, password_hash, rol_id, activo)
-                    VALUES (%s, %s, %s, %s, %s)
-                ''', (self.nombre_usuario, self.email, self.password_hash, self.rol_id, self.activo))
-                return cursor.lastrowid
+            try:
+                if self.id_usuario:
+                    cursor.execute('''
+                        UPDATE usuarios 
+                        SET nombre_usuario=%s, email=%s, password_hash=%s, 
+                            rol_id=%s, activo=%s, ultimo_acceso=NOW()
+                        WHERE id_usuario=%s
+                    ''', (self.nombre_usuario, self.email, self.password_hash,
+                          self.rol_id, self.activo, self.id_usuario))
+                    return self.id_usuario
+                else:
+                    cursor.execute('''
+                        INSERT INTO usuarios (nombre_usuario, email, password_hash, rol_id, activo)
+                        VALUES (%s, %s, %s, %s, %s)
+                    ''', (self.nombre_usuario, self.email, self.password_hash,
+                          self.rol_id, self.activo))
+                    return cursor.lastrowid
+            except (pymysql.err.IntegrityError, sqlite3.IntegrityError) as e:
+                # Manejar duplicados de forma compatible con ambos motores
+                conn.rollback()
+                if 'Duplicate entry' in str(e) or 'UNIQUE constraint failed' in str(e):
+                    # Si es un duplicado, buscar el usuario existente
+                    if self.email:
+                        existing = self.get_by_email(self.email)
+                    else:
+                        existing = self.get_by_username(self.nombre_usuario)
+                    if existing:
+                        return existing.id_usuario
+                raise e
     
     @classmethod
     def get_by_username(cls, nombre_usuario: str) -> Optional['Usuario']:

@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS roles (
     KEY idx_nombre (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insertar roles
-INSERT IGNORE INTO roles (id_rol, nombre, descripcion) VALUES
+-- Insertar roles (compatible con MySQL y SQLite)
+INSERT OR IGNORE INTO roles (id_rol, nombre, descripcion) VALUES
 (1, 'admin', 'Administrador del sistema - Acceso completo'),
 (2, 'reclutador', 'Reclutador - Gestión de cargos, candidatos y postulaciones'),
 (3, 'gerente', 'Gerente de RRHH - Visualización de reportes'),
@@ -165,29 +165,29 @@ CREATE TABLE IF NOT EXISTS documentos (
 -- DATOS DE EJEMPLO
 -- =====================================================
 
--- Usuarios de ejemplo
-INSERT IGNORE INTO usuarios (nombre_usuario, email, password_hash, rol_id) VALUES
+-- Usuarios de ejemplo (compatible con MySQL y SQLite)
+INSERT OR IGNORE INTO usuarios (nombre_usuario, email, password_hash, rol_id) VALUES
 ('admin', 'admin@reclutamiento.com', 'pbkdf2:sha256:260000$salt$hash', 1),
 ('reclutador1', 'reclutador@reclutamiento.com', 'pbkdf2:sha256:260000$salt$hash', 2);
 
--- Cargos de ejemplo
-INSERT IGNORE INTO cargos (nombre, descripcion, departamento, salario_minimo, salario_maximo, tipo_contrato) VALUES
+-- Cargos de ejemplo (compatible con MySQL y SQLite)
+INSERT OR IGNORE INTO cargos (nombre, descripcion, departamento, salario_minimo, salario_maximo, tipo_contrato) VALUES
 ('Desarrollador Python', 'Desarrollo de aplicaciones web con Python y Django', 'Tecnología', 15000.00, 25000.00, 'Tiempo Completo'),
 ('Analista de RRHH', 'Gestión de procesos de reclutamiento y selección', 'Recursos Humanos', 12000.00, 18000.00, 'Tiempo Completo'),
 ('Diseñador UX/UI', 'Diseño de interfaces y experiencia de usuario', 'Diseño', 13000.00, 20000.00, 'Tiempo Completo');
 
--- Candidatos de ejemplo
-INSERT IGNORE INTO candidatos (cedula, nombre, apellido, email, telefono, resumen, habilidades, experiencia_anos, nivel_educativo, ubicacion, disponibilidad, salario_esperado) VALUES
+-- Candidatos de ejemplo (compatible con MySQL y SQLite)
+INSERT OR IGNORE INTO candidatos (cedula, nombre, apellido, email, telefono, resumen, habilidades, experiencia_anos, nivel_educativo, ubicacion, disponibilidad, salario_esperado) VALUES
 ('1234567890', 'Juan', 'Pérez', 'juan.perez@email.com', '555-1234', 'Desarrollador con 5 años de experiencia', 'Python,Django,JavaScript,React', 5, 'Universitario', 'Quito', 'Inmediata', 20000.00),
 ('0987654321', 'María', 'García', 'maria.garcia@email.com', '555-5678', 'Diseñadora especializada en UX/UI', 'Figma,Adobe XD,Sketch,Photoshop', 3, 'Universitario', 'Guayaquil', '2 semanas', 18000.00);
 
--- Postulaciones de ejemplo
-INSERT IGNORE INTO postulaciones (cedula, id_cargo, estado, fuente_reclutamiento) VALUES
+-- Postulaciones de ejemplo (compatible con MySQL y SQLite)
+INSERT OR IGNORE INTO postulaciones (cedula, id_cargo, estado, fuente_reclutamiento) VALUES
 ('1234567890', 1, 'En revisión', 'LinkedIn'),
 ('0987654321', 3, 'Recibido', 'Sitio web');
 
--- Experiencias de ejemplo
-INSERT IGNORE INTO experiencias (cedula, empresa, cargo, fecha_inicio, fecha_fin, actual, descripcion) VALUES
+-- Experiencias de ejemplo (compatible con MySQL y SQLite)
+INSERT OR IGNORE INTO experiencias (cedula, empresa, cargo, fecha_inicio, fecha_fin, actual, descripcion) VALUES
 ('1234567890', 'Tech Solutions', 'Desarrollador Junior', '2019-01-15', '2021-06-30', 0, 'Desarrollo de aplicaciones web'),
 ('1234567890', 'Digital Agency', 'Desarrollador Python', '2021-07-01', '2024-12-31', 1, 'Desarrollo con Django y Flask'),
 ('0987654321', 'Design Studio', 'Diseñadora UX', '2021-03-01', '2023-08-31', 0, 'Diseño de aplicaciones móviles'),
