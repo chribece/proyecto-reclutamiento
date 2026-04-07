@@ -81,7 +81,7 @@ class CargoForm(FlaskForm):
 
 class ReferenciaForm(FlaskForm):
     nombre = StringField('Nombre completo', validators=[DataRequired(), Length(max=100)])
-    telefono = StringField('Teléfono', validators=[DataRequired(), Length(max=20)])
+    telefono = StringField('Teléfono', validators=[DataRequired(), Regexp(r'^\d{10}$', message='El teléfono debe tener máximo 10 dígitos numéricos'), Length(max=10)])
     relacion = StringField('Relación', validators=[Optional(), Length(max=50)])
     descripcion = StringField('Descripción', default='No aplica', validators=[Length(max=200)])
 
@@ -104,7 +104,7 @@ class CandidatoForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=50)])
     apellido = StringField('Apellido', validators=[DataRequired(), Length(min=2, max=50)])
     email = EmailField('Email', validators=[DataRequired(), Email()])
-    telefono = StringField('Teléfono', validators=[Optional(), Length(max=20)])
+    telefono = StringField('Teléfono', validators=[Optional(), Regexp(r'^\d{10}$', message='El teléfono debe tener máximo 10 dígitos numéricos'), Length(max=10)])
     
     # Vacante a aplicar (solo para administradores)
     cargo_id = SelectField('Vacante a la que aplica', coerce=int, validators=[Optional()])
@@ -115,6 +115,7 @@ class CandidatoForm(FlaskForm):
     experiencia_anos = IntegerField('Años de Experiencia Total', validators=[Optional(), NumberRange(min=0, max=50)])
     nivel_educativo = SelectField('Nivel Educativo', choices=[
         ('', 'Seleccione...'),
+        ('Bachiller', 'Bachiller'),
         ('Técnico', 'Técnico'),
         ('Universitario', 'Universitario'),
         ('Posgrado', 'Posgrado'),
@@ -148,7 +149,7 @@ class CandidatoRegistroForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=50)])
     apellido = StringField('Apellido', validators=[DataRequired(), Length(min=2, max=50)])
     email = EmailField('Email', validators=[Optional()])  # Hacer opcional para candidatos
-    telefono = StringField('Teléfono', validators=[Optional(), Length(max=20)])
+    telefono = StringField('Teléfono', validators=[Optional(), Regexp(r'^\d{7,10}$', message='El teléfono debe tener entre 7 y 10 dígitos numéricos'), Length(min=7, max=10)])
     
     # Información profesional
     resumen = TextAreaField('Resumen Profesional', validators=[Optional(), Length(max=3000)])
@@ -156,6 +157,7 @@ class CandidatoRegistroForm(FlaskForm):
     experiencia_anos = IntegerField('Años de Experiencia Total', validators=[Optional(), NumberRange(min=0, max=50)])
     nivel_educativo = SelectField('Nivel Educativo', choices=[
         ('', 'Seleccione...'),
+        ('Bachiller', 'Bachiller'),
         ('Técnico', 'Técnico'),
         ('Universitario', 'Universitario'),
         ('Posgrado', 'Posgrado'),
