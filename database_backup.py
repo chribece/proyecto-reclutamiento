@@ -66,64 +66,6 @@ class DatabaseManager:
         """Obtiene una conexión a la base de datos (MySQL o SQLite)"""
         conn = None
         try:
-            if self.use_mysql:
-                # Conexión MySQL con DictCursor para resultados como diccionarios
-                conn = pymysql.connect(
-                    cursorclass=pymysql.cursors.DictCursor,
-                    **self.config
-                )
-            else:
-                # Conexión SQLite con row_factory para resultados como diccionarios
-                conn = sqlite3.connect(self.sqlite_db_path)
-                conn.row_factory = sqlite3.Row  # Para que los resultados se comporten como diccionarios
-            
-            yield conn
-            conn.commit()
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            raise e
-        finally:
-            if conn:
-                conn.close()
-    
-    @contextmanager
-    def get_cursor(self):
-        """Obtiene un cursor con manejo automático de placeholders"""
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            try:
-                yield cursor
-            finally:
-                cursor.close()
-    
-    def ejecutar_consulta(self, query: str, params=None, fetch_one=False, fetch_all=False):
-        """
-        Método unificado para ejecutar consultas con compatibilidad MySQL/SQLite
-        """
-        with self.get_cursor() as cursor:
-            self._cursor_execute(cursor, query, params)
-            
-            if fetch_one:
-                result = cursor.fetchone()
-                # Convertir sqlite.Row a dict si es necesario
-                if self.db_type == 'sqlite' and isinstance(result, sqlite3.Row):
-                    result = dict(result)
-                return result
-            elif fetch_all:
-                results = cursor.fetchall()
-                # Convertir sqlite.Row a dict si es necesario
-                if self.db_type == 'sqlite':
-                    results = [dict(row) if isinstance(row, sqlite3.Row) else row for row in results]
-                return results
-            else:
-                # Para INSERT, UPDATE, DELETE
-                return cursor.rowcount
-    
-    def init_database(self):
-        """Inicializa todas las tablas de la base de datos"""
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
             
             # Tabla Roles
             if self.use_mysql:
@@ -145,18 +87,10 @@ class DatabaseManager:
             
             # Insertar roles por defecto usando try/except para compatibilidad
             try:
-                self._cursor_execute(cursor, 
-                    "INSERT INTO roles (nombre, descripcion) VALUES (%s, %s)", 
-                    ('admin', 'Administrador del sistema'))
-                self._cursor_execute(cursor, 
-                    "INSERT INTO roles (nombre, descripcion) VALUES (%s, %s)", 
-                    ('reclutador', 'Reclutador'))
-                self._cursor_execute(cursor, 
-                    "INSERT INTO roles (nombre, descripcion) VALUES (%s, %s)", 
-                    ('gerente', 'Gerente de RRHH'))
-                self._cursor_execute(cursor, 
-                    "INSERT INTO roles (nombre, descripcion) VALUES (%s, %s)", 
-                    ('candidato', 'Candidato'))
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('admin', 'Administrador del sistema')")
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('reclutador', 'Reclutador')")
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('gerente', 'Gerente de RRHH')")
+                cursor.execute("INSERT INTO roles (nombre, descripcion) VALUES ('candidato', 'Candidato')")
             except (pymysql.err.IntegrityError, sqlite3.IntegrityError):
                 # Los roles ya existen, continuar
                 pass
@@ -253,7 +187,6 @@ class DatabaseManager:
                         nombre VARCHAR(100) NOT NULL,
                         apellido VARCHAR(100) NOT NULL,
                         email VARCHAR(100) UNIQUE NOT NULL,
-                        telefono VARCHAR(20),
                         resumen TEXT,
                         habilidades TEXT,
                         experiencia_anos INT DEFAULT 0,
@@ -274,7 +207,6 @@ class DatabaseManager:
                         nombre TEXT NOT NULL,
                         apellido TEXT NOT NULL,
                         email TEXT UNIQUE NOT NULL,
-                        telefono TEXT,
                         resumen TEXT,
                         habilidades TEXT,
                         experiencia_anos INTEGER DEFAULT 0,
