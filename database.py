@@ -5,6 +5,69 @@ from config import Config, get_mysql_config
 from datetime import datetime
 import os
 
+class UniversalCursor:
+    """
+    Cursor wrapper que traduce automáticamente placeholders de MySQL (%s) a SQLite (?)
+    y convierte resultados a diccionarios para compatibilidad universal
+    """
+    def __init__(self, cursor, db_type):
+        self.cursor = cursor
+        self.db_type = db_type
+    
+    def _convert_query(self, query):
+        """Convierte placeholders de MySQL (%s) a SQLite (?) automáticamente"""
+        if self.db_type == 'sqlite':
+            import re
+            # Reemplazar %s por ? para SQLite (solo placeholders, no literales)
+            query = re.sub(r'(?<!\\)%s', '?', query)
+        return query
+    
+    def _convert_result(self, result):
+        """Convierte sqlite3.Row a diccionario para compatibilidad"""
+        if self.db_type == 'sqlite' and hasattr(result, 'keys'):
+            # Es un sqlite3.Row, convertir a dict
+            return dict(result)
+        return result
+    
+    def execute(self, query, params=None):
+        """Intercepta todas las llamadas a execute() y traduce si es necesario"""
+        converted_query = self._convert_query(query)
+        if params:
+            return self.cursor.execute(converted_query, params)
+        else:
+            return self.cursor.execute(converted_query)
+    
+    def executemany(self, query, params=None):
+        """Intercepta llamadas a executemany()"""
+        converted_query = self._convert_query(query)
+        if params:
+            return self.cursor.executemany(converted_query, params)
+        else:
+            return self.cursor.executemany(converted_query)
+    
+    def fetchone(self):
+        """Convierte el resultado a diccionario si es necesario"""
+        result = self.cursor.fetchone()
+        return self._convert_result(result)
+    
+    def fetchall(self):
+        """Convierte todos los resultados a diccionarios si es necesario"""
+        results = self.cursor.fetchall()
+        if self.db_type == 'sqlite':
+            return [self._convert_result(row) for row in results]
+        return results
+    
+    def fetchmany(self, size=None):
+        """Convierte múltiples resultados a diccionarios si es necesario"""
+        results = self.cursor.fetchmany(size) if size else self.cursor.fetchmany()
+        if self.db_type == 'sqlite':
+            return [self._convert_result(row) for row in results]
+        return results
+    
+    def __getattr__(self, name):
+        """Delega todos los demás métodos al cursor original"""
+        return getattr(self.cursor, name)
+
 class DatabaseManager:
     _instance = None
     
@@ -63,7 +126,7 @@ class DatabaseManager:
     
     @contextmanager
     def get_connection(self):
-        """Obtiene una conexión a la base de datos (MySQL o SQLite)"""
+        """Obtiene una conexión a la base de datos (MySQL o SQLite) con cursor universal"""
         conn = None
         try:
             if self.use_mysql:
@@ -77,8 +140,35 @@ class DatabaseManager:
                 conn = sqlite3.connect(self.sqlite_db_path)
                 conn.row_factory = sqlite3.Row  # Para que los resultados se comporten como diccionarios
             
-            yield conn
-            conn.commit()
+            # Crear un wrapper para la conexión que devuelva cursores universales
+            class UniversalConnection:
+                def __init__(self, connection, db_type):
+                    self.connection = connection
+                    self.db_type = db_type
+                
+                def cursor(self):
+                    """Devuelve un cursor universal que traduce placeholders automáticamente"""
+                    original_cursor = self.connection.cursor()
+                    return UniversalCursor(original_cursor, self.db_type)
+                
+                def commit(self):
+                    return self.connection.commit()
+                
+                def rollback(self):
+                    return self.connection.rollback()
+                
+                def close(self):
+                    return self.connection.close()
+                
+                def __getattr__(self, name):
+                    """Delega todos los demás métodos a la conexión original"""
+                    return getattr(self.connection, name)
+            
+            # Envolver la conexión con nuestro traductor universal
+            universal_conn = UniversalConnection(conn, self.db_type)
+            
+            yield universal_conn
+            universal_conn.commit()
         except Exception as e:
             if conn:
                 conn.rollback()
