@@ -1352,5 +1352,10 @@ if __name__ == '__main__':
     app.run(debug=True, port=5000)
 else:
     # Configuración para producción (Render.com)
-    # Render establece las variables de entorno automáticamente
-    pass
+    # Inicializar base de datos automáticamente en producción
+    try:
+        from init_produccion import inicializar_produccion
+        inicializar_produccion()
+    except Exception as e:
+        print(f"Error al inicializar producción: {e}")
+        pass

@@ -11,8 +11,19 @@ mysql_configured = all([
     os.environ.get('DB_NAME')
 ])
 
+# Detectar si tenemos DATABASE_URL (Render PostgreSQL)
+database_url = os.environ.get('DATABASE_URL')
+
 # Determinar la URI de la base de datos según la configuración
-if mysql_configured and os.environ.get('FLASK_ENV') != 'testing':
+if database_url and 'postgresql://' in database_url:
+    # Usar PostgreSQL de Render
+    SQLALCHEMY_DATABASE_URI = database_url
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+    }
+    print(f" Usando PostgreSQL (Render): {database_url.split('@')[1] if '@' in database_url else 'Render Database'}")
+elif mysql_configured and os.environ.get('FLASK_ENV') != 'testing':
     # Usar MySQL
     SQLALCHEMY_DATABASE_URI = (
         f"mysql+pymysql://"

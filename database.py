@@ -1,5 +1,6 @@
 import pymysql
 import sqlite3
+import psycopg2
 from contextlib import contextmanager
 from config import Config, get_mysql_config
 from datetime import datetime
@@ -15,11 +16,12 @@ class UniversalCursor:
         self.db_type = db_type
     
     def _convert_query(self, query):
-        """Convierte placeholders de MySQL (%s) a SQLite (?) automáticamente"""
+        """Convierte placeholders según el tipo de base de datos"""
         if self.db_type == 'sqlite':
             import re
             # Reemplazar %s por ? para SQLite (solo placeholders, no literales)
             query = re.sub(r'(?<!\\)%s', '?', query)
+        # PostgreSQL y MySQL usan %s como placeholder, no necesitan conversión
         return query
     
     def _convert_result(self, result):
@@ -81,17 +83,22 @@ class DatabaseManager:
         if self._initialized:
             return
         
-        # Determinar si usamos MySQL o SQLite con mejor detección
+        # Determinar tipo de base de datos
+        database_url = os.environ.get('DATABASE_URL', '')
         self.mysql_config = get_mysql_config()
         self.use_mysql = self.mysql_config is not None
+        self.use_postgresql = 'postgresql://' in database_url
         
-        if self.use_mysql:
+        if self.use_postgresql:
+            # Configuración para PostgreSQL (Render)
+            self.config = database_url
+            self.db_type = 'postgresql'
+        elif self.use_mysql:
             # Configuración para MySQL/MariaDB
             self.config = self.mysql_config
             self.db_type = 'mysql'
         else:
             # Configuración para SQLite (fallback)
-            # Usar variable de entorno o path por defecto
             self.sqlite_db_path = os.environ.get('SQLITE_DB_PATH', 'reclutamiento.db')
             self.db_type = 'sqlite'
         
@@ -126,10 +133,14 @@ class DatabaseManager:
     
     @contextmanager
     def get_connection(self):
-        """Obtiene una conexión a la base de datos (MySQL o SQLite) con cursor universal"""
+        """Obtiene una conexión a la base de datos (MySQL, PostgreSQL o SQLite) con cursor universal"""
         conn = None
         try:
-            if self.use_mysql:
+            if self.use_postgresql:
+                # Conexión PostgreSQL con cursor para resultados como diccionarios
+                conn = psycopg2.connect(self.config)
+                # PostgreSQL usa %s como placeholder, no necesita conversión
+            elif self.use_mysql:
                 # Conexión MySQL con DictCursor para resultados como diccionarios
                 conn = pymysql.connect(
                     cursorclass=pymysql.cursors.DictCursor,
@@ -148,7 +159,12 @@ class DatabaseManager:
                 
                 def cursor(self):
                     """Devuelve un cursor universal que traduce placeholders automáticamente"""
-                    original_cursor = self.connection.cursor()
+                    if self.db_type == 'postgresql':
+                        # PostgreSQL con cursor de diccionarios
+                        import psycopg2.extras
+                        original_cursor = self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+                    else:
+                        original_cursor = self.connection.cursor()
                     return UniversalCursor(original_cursor, self.db_type)
                 
                 def commit(self):
