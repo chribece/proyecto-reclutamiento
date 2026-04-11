@@ -32,6 +32,37 @@ def actualizar_base_de_datos():
             else:
                 print("✅ Campo 'telefono' ya existe")
             
+            # Crear tabla sucursales si no existe
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sucursales'")
+            if not cursor.fetchone():
+                print("➕ Creando tabla 'sucursales'...")
+                cursor.execute('''
+                    CREATE TABLE sucursales (
+                        id_sucursal INTEGER PRIMARY KEY AUTOINCREMENT,
+                        nombre TEXT NOT NULL,
+                        direccion TEXT,
+                        telefono TEXT,
+                        activa INTEGER DEFAULT 1
+                    )
+                ''')
+                # Insertar sucursal por defecto
+                cursor.execute('INSERT INTO sucursales (nombre, activa) VALUES (?, ?)', ('Matriz', 1))
+                print("✅ Tabla 'sucursales' creada correctamente")
+            else:
+                print("✅ Tabla 'sucursales' ya existe")
+            
+            # Verificar si la tabla cargos tiene el campo id_sucursal
+            cursor.execute('PRAGMA table_info(cargos)')
+            columnas_cargos = cursor.fetchall()
+            nombres_columnas_cargos = [col['name'] for col in columnas_cargos]
+            
+            if 'id_sucursal' not in nombres_columnas_cargos:
+                print("➕ Agregando campo 'id_sucursal' a la tabla cargos...")
+                cursor.execute('ALTER TABLE cargos ADD COLUMN id_sucursal INTEGER')
+                print("✅ Campo 'id_sucursal' agregado correctamente")
+            else:
+                print("✅ Campo 'id_sucursal' ya existe en cargos")
+            
             conn.commit()
             print("🎉 ¡Base de datos actualizada exitosamente!")
             
