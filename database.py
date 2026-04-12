@@ -229,6 +229,7 @@ class DatabaseManager:
         # Variables locales según tipo de BD
         is_postgres = self.db_type == 'postgresql'
         id_type = "SERIAL PRIMARY KEY" if is_postgres else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        bool_type = "BOOLEAN" if is_postgres else "INTEGER"
         bool_true = "TRUE" if is_postgres else "1"
         timestamp_now = "NOW()" if is_postgres else "CURRENT_TIMESTAMP"
         placeholder = "%s" if is_postgres else "?"
@@ -267,7 +268,7 @@ class DatabaseManager:
                     email VARCHAR(100) UNIQUE NOT NULL,
                     password_hash VARCHAR(255) NOT NULL,
                     rol_id INTEGER NOT NULL,
-                    activo INTEGER DEFAULT {bool_true},
+                    activo {bool_type} DEFAULT {bool_true},
                     created_at TIMESTAMP DEFAULT {timestamp_now},
                     ultimo_acceso TIMESTAMP NULL
                 )
@@ -280,7 +281,7 @@ class DatabaseManager:
                     nombre VARCHAR(100) NOT NULL,
                     direccion TEXT,
                     telefono VARCHAR(20),
-                    activa INTEGER DEFAULT {bool_true}
+                    activa {bool_type} DEFAULT {bool_true}
                 )
             """)
             
@@ -288,7 +289,7 @@ class DatabaseManager:
             cursor.execute("SELECT COUNT(*) as count FROM sucursales")
             if get_count(cursor) == 0:
                 if is_postgres:
-                    cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)", ('Matriz', 1))
+                    cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)", ('Matriz', True))
                 else:
                     cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (?, ?)", ('Matriz', 1))
             
@@ -326,7 +327,7 @@ class DatabaseManager:
                     disponibilidad VARCHAR(50),
                     salario_esperado DECIMAL(10,2),
                     fecha_registro TIMESTAMP DEFAULT {timestamp_now},
-                    activo INTEGER DEFAULT {bool_true}
+                    activo {bool_type} DEFAULT {bool_true}
                 )
             """)
             
@@ -366,7 +367,7 @@ class DatabaseManager:
                     cargo VARCHAR(100) NOT NULL,
                     fecha_inicio DATE NOT NULL,
                     fecha_fin DATE,
-                    actual INTEGER DEFAULT 0,
+                    actual {bool_type} DEFAULT 0,
                     descripcion TEXT
                 )
             """)
