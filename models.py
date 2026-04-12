@@ -846,82 +846,8 @@ class Experiencia:
                     (cedula, empresa, cargo, fecha_inicio, fecha_fin, actual, descripcion)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ''', (self.cedula, self.empresa, self.cargo,
-                SELECT estado, COUNT(*) as total 
-                FROM postulaciones 
-                GROUP BY estado
-            ''')
-            por_estado = {row['estado']: row['total'] for row in cursor.fetchall()}
-            
-            cursor.execute('''
-                SELECT p.*, c.nombre, c.apellido, cg.nombre as cargo_nombre
-                FROM postulaciones p
-                JOIN candidatos c ON p.cedula = c.cedula
-                JOIN cargos cg ON p.id_cargo = cg.id_cargo
-                ORDER BY p.fecha_postulacion DESC
-                LIMIT 5
-            ''')
-            ultimas = cursor.fetchall()
-            
-            return {
-                'cargos_activos': cargos_activos,
-                'total_candidatos': total_candidatos,
-                'total_postulaciones': total_postulaciones,
-                'por_estado': por_estado,
-                'ultimas_postulaciones': ultimas
-            }
-
-@dataclass
-class EstadoPipeline:
-    id_estado: int = 0
-    codigo: str = ""
-    descripcion: str = ""
-    
-    @classmethod
-    def from_row(cls, row: Dict) -> 'EstadoPipeline':
-        return cls(
-            id_estado=row.get('id_estado', 0),
-            codigo=row.get('codigo', ''),
-            descripcion=row.get('descripcion', '')
-        )
-    
-    @classmethod
-    def get_all(cls) -> List['EstadoPipeline']:
-        """Obtener todos los estados del pipeline desde la base de datos"""
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM cat_estado_postulacion ORDER BY id_estado')
-            return [cls.from_row(row) for row in cursor.fetchall()]
-    
-    @classmethod
-    def get_by_codigo(cls, codigo: str) -> Optional['EstadoPipeline']:
-        """Obtener un estado por su código"""
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM cat_estado_postulacion WHERE codigo = %s', (codigo,))
-            row = cursor.fetchone()
-            return cls.from_row(row) if row else None
-    
-    @classmethod
-    def get_siguientes_estados(cls, estado_actual: str) -> List[str]:
-        """Obtener los siguientes estados válidos desde la base de datos"""
-        # Transiciones válidas basadas en el pipeline de reclutamiento
-        # Usando los nombres corregidos sin tildes de la base de datos
-        transiciones = {
-            'Recibido': ['En revision', 'Rechazado', 'Descartado'],
-            'En revision': ['Entrevista tecnica', 'Rechazado', 'Descartado'],
-            'Entrevista tecnica': ['Entrevista RRHH', 'Rechazado', 'Descartado'],
-            'Entrevista RRHH': ['Oferta', 'Rechazado', 'Descartado'],
-            'Oferta': ['Contratado', 'Rechazado'],
-            'Contratado': [],
-            'Rechazado': [],
-            'Descartado': []
-        }
-        return transiciones.get(estado_actual, [])
-    
-    @classmethod
-    def puede_transicionar(cls, estado_actual: str, nuevo_estado: str) -> bool:
-        """Verificar si se puede transicionar de un estado a otro"""
-        return nuevo_estado in cls.get_siguientes_estados(estado_actual)
+                      self.fecha_inicio, self.fecha_fin, self.actual, self.descripcion))
+                return cursor.lastrowid
 
 
 @dataclass
@@ -929,7 +855,7 @@ class EstadisticasRRHH:
     """Clase para estadísticas de RRHH"""
     
     @classmethod
-    def get_dashboard_stats() -> Dict[str, Any]:
+    def get_dashboard_stats(cls) -> Dict[str, Any]:
         """Obtener estadísticas para el dashboard"""
         try:
             with db.get_connection() as conn:
@@ -995,3 +921,57 @@ class EstadisticasRRHH:
                 'total_cargos': 0,
                 'por_estado': {}
             }
+
+
+@dataclass
+class EstadoPipeline:
+    id_estado: int = 0
+    codigo: str = ""
+    descripcion: str = ""
+    
+    @classmethod
+    def from_row(cls, row: Dict) -> 'EstadoPipeline':
+        return cls(
+            id_estado=row.get('id_estado', 0),
+            codigo=row.get('codigo', ''),
+            descripcion=row.get('descripcion', '')
+        )
+    
+    @classmethod
+    def get_all(cls) -> List['EstadoPipeline']:
+        """Obtener todos los estados del pipeline desde la base de datos"""
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM cat_estado_postulacion ORDER BY id_estado')
+            return [cls.from_row(row) for row in cursor.fetchall()]
+    
+    @classmethod
+    def get_by_codigo(cls, codigo: str) -> Optional['EstadoPipeline']:
+        """Obtener un estado por su código"""
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM cat_estado_postulacion WHERE codigo = %s', (codigo,))
+            row = cursor.fetchone()
+            return cls.from_row(row) if row else None
+    
+    @classmethod
+    def get_siguientes_estados(cls, estado_actual: str) -> List[str]:
+        """Obtener los siguientes estados válidos desde la base de datos"""
+        # Transiciones válidas basadas en el pipeline de reclutamiento
+        # Usando los nombres corregidos sin tildes de la base de datos
+        transiciones = {
+            'Recibido': ['En revision', 'Rechazado', 'Descartado'],
+            'En revision': ['Entrevista tecnica', 'Rechazado', 'Descartado'],
+            'Entrevista tecnica': ['Entrevista RRHH', 'Rechazado', 'Descartado'],
+            'Entrevista RRHH': ['Oferta', 'Rechazado', 'Descartado'],
+            'Oferta': ['Contratado', 'Rechazado'],
+            'Contratado': [],
+            'Rechazado': [],
+            'Descartado': []
+        }
+        return transiciones.get(estado_actual, [])
+    
+    @classmethod
+    def puede_transicionar(cls, estado_actual: str, nuevo_estado: str) -> bool:
+        """Verificar si se puede transicionar de un estado a otro"""
+        return nuevo_estado in cls.get_siguientes_estados(estado_actual)
