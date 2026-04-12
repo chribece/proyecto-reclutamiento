@@ -1,31 +1,43 @@
+version: "1"
+
+# BASE DE DATOS (sección aparte, NO dentro de services)
+databases:
+  - name: reclutamiento-db
+    databaseName: reclutamiento_db
+    user: reclutamiento_user
+    plan: free
+    region: oregon
+
+# SERVICIOS (solo aplicaciones web, workers, etc.)
 services:
-  # Servicio Web
   - type: web
     name: reclutamiento-web
-    env: python
+    runtime: python
     plan: free
+    region: oregon
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
+    startCommand: "gunicorn app:app"  # Mejor que python app.py para producción
+    healthCheckPath: /api/health  # Importante para que Render sepa que está listo
+    
+    # COMANDO CLAVE: Ejecuta el seed antes de iniciar la app
+    preDeployCommand: "python init_produccion.py"
+    
     envVars:
-      # Variables de entorno para producción
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
         generateValue: true
       - key: FLASK_DEBUG
-        value: false
+        value: "false"
       - key: SESSION_COOKIE_SECURE
-        value: true
-      # Base de datos (Render PostgreSQL)
+        value: "true"
+      
+      # Conexión automática a la base de datos
       - key: DATABASE_URL
         fromDatabase:
           name: reclutamiento-db
           property: connectionString
-
-  # Base de Datos PostgreSQL
-  - type: postgres
-    name: reclutamiento-db
-    plan: free
-    ipAllowList: []  # Solo accesible desde el servicio web
-
-version: "1"
+      
+      # Variable para que el script sepa que está en Render
+      - key: RENDER
+        value: "true"
