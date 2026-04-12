@@ -237,6 +237,46 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
+            # En producción, limpiar tablas si existen con estructura incorrecta
+            if os.environ.get('FLASK_ENV') == 'production' and is_postgres:
+                print(" Verificando tablas existentes en producción...")
+                tablas_a_verificar = ['usuarios', 'sucursales', 'candidatos', 'experiencias']
+                
+                for tabla in tablas_a_verificar:
+                    try:
+                        cursor.execute(f"""
+                            SELECT column_name, data_type, column_default 
+                            FROM information_schema.columns 
+                            WHERE table_name = '{tabla}' 
+                            AND column_name IN ('activo', 'activa', 'actual')
+                        """)
+                        columnas = cursor.fetchall()
+                        
+                        # Verificar si hay columnas booleanas con problemas
+                        for col in columnas:
+                            col_name = col[0] if isinstance(col, (tuple, list)) else col.get('column_name')
+                            data_type = col[1] if isinstance(col, (tuple, list)) else col.get('data_type')
+                            default_val = col[2] if isinstance(col, (tuple, list)) else col.get('column_default')
+                            
+                            if col_name and data_type == 'integer' and default_val and 'true' in str(default_val).lower():
+                                print(f" Detectada columna {col_name} con estructura incorrecta en tabla {tabla}")
+                                print(f"  Tipo: {data_type}, Default: {default_val}")
+                                
+                                # Eliminar y recrear la tabla
+                                print(f" Eliminando tabla {tabla} para recrear con estructura correcta...")
+                                cursor.execute(f"DROP TABLE IF EXISTS {tabla} CASCADE")
+                                print(f" Tabla {tabla} eliminada")
+                                break
+                                
+                    except Exception as e:
+                        print(f" Error verificando tabla {tabla}: {e}")
+                        # Si hay error, eliminar la tabla por seguridad
+                        try:
+                            cursor.execute(f"DROP TABLE IF EXISTS {tabla} CASCADE")
+                            print(f" Tabla {tabla} eliminada por seguridad")
+                        except:
+                            pass
+            
             # Tabla roles
             cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS roles (
