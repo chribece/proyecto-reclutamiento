@@ -936,7 +936,10 @@ class EstadisticasRRHH:
                 cursor = conn.cursor()
                 
                 # Cargos activos
-                cursor.execute('SELECT COUNT(*) as count FROM cargos WHERE estado = %s', ('Activo',))
+                query = 'SELECT COUNT(*) as count FROM cargos WHERE estado = %s'
+                params = ('Activo',)
+                print(f"DEBUG SQL: {query} | params: {params}")
+                cursor.execute(query, params)
                 result = cursor.fetchone()
                 cargos_activos = result['count'] if isinstance(result, dict) else result[0]
                 
