@@ -231,6 +231,7 @@ class DatabaseManager:
         id_type = "SERIAL PRIMARY KEY" if is_postgres else "INTEGER PRIMARY KEY AUTOINCREMENT"
         bool_type = "BOOLEAN" if is_postgres else "INTEGER"
         bool_true = "TRUE" if is_postgres else "1"
+        bool_false = "FALSE" if is_postgres else "0"
         timestamp_now = "NOW()" if is_postgres else "CURRENT_TIMESTAMP"
         placeholder = "%s" if is_postgres else "?"
         
@@ -407,7 +408,7 @@ class DatabaseManager:
                     cargo VARCHAR(100) NOT NULL,
                     fecha_inicio DATE NOT NULL,
                     fecha_fin DATE,
-                    actual {bool_type} DEFAULT 0,
+                    actual {bool_type} DEFAULT {bool_false},
                     descripcion TEXT
                 )
             """)
