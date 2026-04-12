@@ -581,24 +581,45 @@ def lista_cargos():
     return render_template('cargos/lista.html', cargos=cargos, estado_filtro=estado)
 
 @app.route('/cargos/nuevo', methods=['GET', 'POST'])
+@login_required
 @require_role(['admin', 'reclutador'])
 def nuevo_cargo():
+    print("CARGO DEBUG: Entrando a nuevo_cargo()")
     form = CargoForm()
+    print(f"CARGO DEBUG: Formulario creado, validate_on_submit: {form.validate_on_submit()}")
+    
     if form.validate_on_submit():
-        cargo = Cargo(
-            nombre=form.nombre.data,
-            descripcion=form.descripcion.data,
-            departamento=form.departamento.data,
-            salario_minimo=form.salario_minimo.data,
-            salario_maximo=form.salario_maximo.data,
-            tipo_contrato=form.tipo_contrato.data,
-            id_sucursal=form.id_sucursal.data,
-            estado=form.estado.data,
-            fecha_cierre=form.fecha_cierre.data
-        )
-        cargo.save()
-        flash('✅ Vacante creada exitosamente', 'success')
-        return redirect(url_for('lista_cargos'))
+        try:
+            print(f"CARGO DEBUG: Datos del formulario: nombre={form.nombre.data}, depto={form.departamento.data}")
+            cargo = Cargo(
+                nombre=form.nombre.data,
+                descripcion=form.descripcion.data,
+                departamento=form.departamento.data,
+                salario_minimo=form.salario_minimo.data,
+                salario_maximo=form.salario_maximo.data,
+                tipo_contrato=form.tipo_contrato.data,
+                id_sucursal=form.id_sucursal.data,
+                estado=form.estado.data,
+                fecha_cierre=form.fecha_cierre.data
+            )
+            print(f"CARGO DEBUG: Cargo creado, llamando save()...")
+            cargo.save()
+            print(f"CARGO DEBUG: Cargo guardado exitosamente")
+            flash('✅ Vacante creada exitosamente', 'success')
+            return redirect(url_for('lista_cargos'))
+        except Exception as e:
+            print(f"CARGO ERROR: Error al crear cargo: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f'❌ Error al crear vacante: {str(e)}', 'error')
+            return render_template('cargos/formulario.html', form=form, titulo='Nueva Vacante')
+    else:
+        if request.method == 'POST':
+            print(f"CARGO DEBUG: Formulario no validado. Errores: {form.errors}")
+            for field_name, field_errors in form.errors.items():
+                for error in field_errors:
+                    flash(f'Error en {field_name}: {error}', 'error')
+    
     return render_template('cargos/formulario.html', form=form, titulo='Nueva Vacante')
 
 @app.route('/cargos/<int:id>/editar', methods=['GET', 'POST'])
