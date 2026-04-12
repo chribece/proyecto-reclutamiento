@@ -2,177 +2,81 @@
 """
 Script para inicializar la base de datos en producción (Render)
 Crea las tablas y usuarios de prueba automáticamente de forma idempotente
+Soporte completo para PostgreSQL y SQLite
 """
 
 import os
-from database import db
+from database import db, get_db_type
 from models import Usuario
 
 def inicializar_produccion():
     """Inicializa la base de datos completa para producción de forma idempotente"""
     
-    print("🚀 Inicializando base de datos para producción...")
+    print(" Inicializando base de datos para producción...")
     
     try:
         # 1. Inicializar la base de datos (ya es idempotente)
-        print("📊 Creando tablas de la base de datos...")
+        print(" Creando tablas de la base de datos...")
         db.init_database()
-        print("✅ Tablas verificadas/creadas correctamente")
+        print(" Tablas verificadas/creadas correctamente")
         
-        # 2. Actualizar estructura de forma idempotente
-        print("🔧 Verificando estructura de la base de datos...")
-        
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Verificar/agregar campo telefono en candidatos (SQLite/PostgreSQL)
-            if db.db_type == 'sqlite':
-                cursor.execute('PRAGMA table_info(candidatos)')
-                columnas = cursor.fetchall()
-                nombres_columnas = [col['name'] for col in columnas]
-                
-                if 'telefono' not in nombres_columnas:
-                    print("➕ Agregando campo 'telefono' a candidatos...")
-                    cursor.execute('ALTER TABLE candidatos ADD COLUMN telefono TEXT')
-                    print("✅ Campo 'telefono' agregado")
-                else:
-                    print("✅ Campo 'telefono' ya existe")
-            
-            elif db.db_type == 'postgresql':
-                cursor.execute('''
-                    SELECT column_name 
-                    FROM information_schema.columns 
-                    WHERE table_name = 'candidatos' AND column_name = 'telefono'
-                ''')
-                if not cursor.fetchone():
-                    print("➕ Agregando campo 'telefono' a candidatos...")
-                    cursor.execute('ALTER TABLE candidatos ADD COLUMN telefono TEXT')
-                    print("✅ Campo 'telefono' agregado")
-                else:
-                    print("✅ Campo 'telefono' ya existe")
-            
-            # Crear tabla sucursales si no existe (idempotente)
-            if db.db_type == 'sqlite':
-                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sucursales'")
-                if not cursor.fetchone():
-                    print("➕ Creando tabla 'sucursales'...")
-                    cursor.execute('''
-                        CREATE TABLE sucursales (
-                            id_sucursal INTEGER PRIMARY KEY AUTOINCREMENT,
-                            nombre TEXT NOT NULL,
-                            direccion TEXT,
-                            telefono TEXT,
-                            activa INTEGER DEFAULT 1
-                        )
-                    ''')
-                    cursor.execute('INSERT INTO sucursales (nombre, activa) VALUES (?, ?)', ('Matriz', 1))
-                    print("✅ Tabla 'sucursales' creada")
-                else:
-                    print("✅ Tabla 'sucursales' ya existe")
-            
-            elif db.db_type == 'postgresql':
-                cursor.execute('''
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_name = 'sucursales'
-                    )
-                ''')
-                if not cursor.fetchone()[0]:
-                    print("➕ Creando tabla 'sucursales'...")
-                    cursor.execute('''
-                        CREATE TABLE sucursales (
-                            id_sucursal SERIAL PRIMARY KEY,
-                            nombre TEXT NOT NULL,
-                            direccion TEXT,
-                            telefono TEXT,
-                            activa INTEGER DEFAULT 1
-                        )
-                    ''')
-                    cursor.execute('INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)', ('Matriz', 1))
-                    print("✅ Tabla 'sucursales' creada")
-                else:
-                    print("✅ Tabla 'sucursales' ya existe")
-            
-            # Verificar/agregar campo id_sucursal en cargos
-            if db.db_type == 'sqlite':
-                cursor.execute('PRAGMA table_info(cargos)')
-                columnas_cargos = cursor.fetchall()
-                nombres_columnas_cargos = [col['name'] for col in columnas_cargos]
-                
-                if 'id_sucursal' not in nombres_columnas_cargos:
-                    print("➕ Agregando campo 'id_sucursal' a cargos...")
-                    cursor.execute('ALTER TABLE cargos ADD COLUMN id_sucursal INTEGER')
-                    print("✅ Campo 'id_sucursal' agregado")
-                else:
-                    print("✅ Campo 'id_sucursal' ya existe")
-            
-            elif db.db_type == 'postgresql':
-                cursor.execute('''
-                    SELECT column_name 
-                    FROM information_schema.columns 
-                    WHERE table_name = 'cargos' AND column_name = 'id_sucursal'
-                ''')
-                if not cursor.fetchone():
-                    print("➕ Agregando campo 'id_sucursal' a cargos...")
-                    cursor.execute('ALTER TABLE cargos ADD COLUMN id_sucursal INTEGER')
-                    print("✅ Campo 'id_sucursal' agregado")
-                else:
-                    print("✅ Campo 'id_sucursal' ya existe")
-            
-            conn.commit()
+        # 2. Verificar estructura (ya está en init_database)
+        print(" Verificando estructura de la base de datos...")
         
         # 3. Crear usuarios de prueba de forma idempotente
-        print("👥 Verificando usuarios de prueba...")
+        print(" Verificando usuarios de prueba...")
         crear_usuarios_produccion_idempotente()
         
-        print("🎉 ¡Base de datos inicializada exitosamente para producción!")
+        print(" Base de datos inicializada exitosamente para producción!")
         return True
         
     except Exception as e:
-        print(f"❌ Error al inicializar producción: {str(e)}")
+        print(f" Error al inicializar producción: {str(e)}")
         return False
 
 def crear_usuarios_produccion_idempotente():
     """Crea los usuarios de prueba de forma idempotente (no falla si ya existen)"""
     
+    # Usuarios específicos solicitados
     usuarios = [
         {
             'nombre_usuario': 'admin',
             'email': 'admin@reclutamiento.com',
             'password': 'Admin123!',
-            'rol_id': 1  # admin
-        },
-        {
-            'nombre_usuario': 'reclutador1',
-            'email': 'reclutador@reclutamiento.com',
-            'password': 'Reclu123!',
-            'rol_id': 2  # reclutador
-        },
-        {
-            'nombre_usuario': 'gerente1',
-            'email': 'gerente@reclutamiento.com',
-            'password': 'Gerente123!',
-            'rol_id': 3  # gerente
-        },
-        {
-            'nombre_usuario': 'juan.perez',
-            'email': 'juan.perez@email.com',
-            'password': 'Candidato1!',
-            'rol_id': 4  # candidato
+            'rol_id': 1,  # admin
+            'nombre_completo': 'Administrador'
         },
         {
             'nombre_usuario': 'maria.garcia',
-            'email': 'maria.garcia@email.com',
-            'password': 'Candidato2!',
-            'rol_id': 4  # candidato
+            'email': 'reclutador@empresa.com',
+            'password': 'Reclutador123!',
+            'rol_id': 2,  # reclutador
+            'nombre_completo': 'María García'
+        },
+        {
+            'nombre_usuario': 'carlos.lopez',
+            'email': 'reclutador2@empresa.com',
+            'password': 'Reclutador123!',
+            'rol_id': 2,  # reclutador
+            'nombre_completo': 'Carlos López'
+        },
+        {
+            'nombre_usuario': 'juan.perez',
+            'email': 'candidato@ejemplo.com',
+            'password': 'Candidato123!',
+            'rol_id': 4,  # candidato
+            'nombre_completo': 'Juan Pérez'
         }
     ]
+    
+    db_type = get_db_type()
     
     for usuario_data in usuarios:
         try:
             # Verificar si el usuario ya existe
             usuario_existente = Usuario.get_by_email(usuario_data['email'])
             if not usuario_existente:
+                # Crear usuario
                 usuario = Usuario(
                     nombre_usuario=usuario_data['nombre_usuario'],
                     email=usuario_data['email'],
@@ -180,12 +84,60 @@ def crear_usuarios_produccion_idempotente():
                     rol_id=usuario_data['rol_id']
                 )
                 usuario.save()
-                print(f"✅ Usuario creado: {usuario_data['email']}")
+                print(f" Usuario creado: {usuario_data['email']} ({usuario_data['nombre_completo']})")
             else:
-                print(f"✅ Usuario ya existe: {usuario_data['email']}")
+                print(f" Usuario ya existe: {usuario_data['email']}")
+                
         except Exception as e:
-            print(f"⚠️ Error con usuario {usuario_data['email']}: {str(e)}")
+            print(f" Error con usuario {usuario_data['email']}: {str(e)}")
             # No fallar completamente si un usuario falla
+
+def verificar_y_crear_datos_iniciales():
+    """Verifica y crea datos iniciales necesarios para el funcionamiento"""
+    
+    try:
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Verificar si hay sucursales
+            cursor.execute("SELECT COUNT(*) FROM sucursales")
+            if cursor.fetchone()[0] == 0:
+                print(" Creando sucursal por defecto...")
+                if db.db_type == 'postgresql':
+                    cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)", ('Matriz', 1))
+                else:
+                    cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (?, ?)", ('Matriz', 1))
+                print(" Sucursal 'Matriz' creada")
+            
+            # Verificar si hay cargos de ejemplo
+            cursor.execute("SELECT COUNT(*) FROM cargos")
+            if cursor.fetchone()[0] == 0:
+                print(" Creando cargos de ejemplo...")
+                cargos_ejemplo = [
+                    ('Desarrollador Python', 'Desarrollo de aplicaciones web Python', 'TI', 1500.00, 2500.00, 'Tiempo completo', 1),
+                    ('Analista de RRHH', 'Reclutamiento y selección de personal', 'RRHH', 1200.00, 1800.00, 'Tiempo completo', 1),
+                    ('Contador', 'Gestión contable y financiera', 'Contabilidad', 1300.00, 2000.00, 'Tiempo completo', 1)
+                ]
+                
+                for cargo in cargos_ejemplo:
+                    if db.db_type == 'postgresql':
+                        cursor.execute("""
+                            INSERT INTO cargos (nombre, descripcion, departamento, salario_minimo, salario_maximo, tipo_contrato, id_sucursal) 
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, cargo)
+                    else:
+                        cursor.execute("""
+                            INSERT INTO cargos (nombre, descripcion, departamento, salario_minimo, salario_maximo, tipo_contrato, id_sucursal) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, cargo)
+                
+                print(" Cargos de ejemplo creados")
+            
+            conn.commit()
+            
+    except Exception as e:
+        print(f" Error creando datos iniciales: {str(e)}")
 
 if __name__ == "__main__":
     inicializar_produccion()
+    verificar_y_crear_datos_iniciales()
