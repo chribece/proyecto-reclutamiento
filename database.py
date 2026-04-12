@@ -186,20 +186,6 @@ class DatabaseManager:
             if conn:
                 conn.close()
     
-    def _get_count_from_cursor(self, cursor, table_name):
-        """Obtiene el valor COUNT(*) compatible con dict (PostgreSQL) y tuple (SQLite/MySQL)"""
-        cursor.execute(f"SELECT COUNT(*) as count FROM {table_name}")
-        row = cursor.fetchone()
-        if row is None:
-            return 0
-        
-        # Si es tupla/lista (SQLite/MySQL), usar índice
-        if isinstance(row, (tuple, list)):
-            return row[0]
-        # Si es diccionario (PostgreSQL), usar clave
-        else:
-            return row.get('count', 0)
-    
     def ejecutar_consulta(self, query: str, params=None, fetch_one=False, fetch_all=False):
         """Método universal para ejecutar consultas"""
         with self.get_connection() as conn:
@@ -240,7 +226,30 @@ class DatabaseManager:
     
     def init_database(self):
         """Inicializa la base de datos con sintaxis correcta para cada tipo"""
-        print(f"🔧 Inicializando base de datos: {self.db_type}")
+        print(f" Inicializando base de datos: {self.db_type}")
+        
+        def get_count(cursor):
+            """Función helper para obtener COUNT(*) compatible con dict (PostgreSQL) y tuple (SQLite/MySQL)"""
+            row = cursor.fetchone()
+            if row is None:
+                return 0
+            
+            # Si es diccionario (PostgreSQL RealDictCursor)
+            if isinstance(row, dict):
+                # Buscar 'count' primero, luego 'COUNT(*)', luego cualquier valor
+                if 'count' in row:
+                    return row['count']
+                elif 'COUNT(*)' in row:
+                    return row['COUNT(*)']
+                else:
+                    # Retornar el primer valor disponible
+                    return next(iter(row.values()), 0)
+            # Si es tupla/lista (SQLite/MySQL)
+            elif isinstance(row, (tuple, list)):
+                return row[0] if len(row) > 0 else 0
+            # Caso por defecto
+            else:
+                return 0
         
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -254,7 +263,8 @@ class DatabaseManager:
             cursor.execute(roles_sql)
             
             # Insertar roles por defecto
-            if self._get_count_from_cursor(cursor, 'roles') == 0:
+            cursor.execute("SELECT COUNT(*) as count FROM roles")
+            if get_count(cursor) == 0:
                 roles_data = [
                     (1, 'admin', 'Administrador del sistema'),
                     (2, 'reclutador', 'Reclutador de personal'),
@@ -290,7 +300,8 @@ class DatabaseManager:
             cursor.execute(sucursales_sql)
             
             # Insertar sucursal por defecto
-            if self._get_count_from_cursor(cursor, 'sucursales') == 0:
+            cursor.execute("SELECT COUNT(*) as count FROM sucursales")
+            if get_count(cursor) == 0:
                 if self.db_type == 'postgresql':
                     cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)", ('Matriz', 1))
                 else:
@@ -390,7 +401,8 @@ class DatabaseManager:
             cursor.execute(estudios_sql)
             
             # Insertar niveles educativos
-            if self._get_count_from_cursor(cursor, 'estudios') == 0:
+            cursor.execute("SELECT COUNT(*) as count FROM estudios")
+            if get_count(cursor) == 0:
                 niveles_data = [
                     ('Bachiller',),
                     ('Técnico',),
