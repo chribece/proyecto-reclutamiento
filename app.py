@@ -371,9 +371,9 @@ def completar_perfil_candidato():
                                 cursor = conn.cursor()
                                 print(f"Intentando insertar documento: {filename}")
                                 cursor.execute('''
-                                    INSERT INTO documentos (cedula, id_postulacion, id_tipo, nombre_archivo, ruta_archivo)
+                                    INSERT INTO documentos (id_postulacion, tipo_documento, nombre_archivo, ruta_archivo, tamano_archivo)
                                     VALUES (%s, %s, %s, %s, %s)
-                                ''', (candidato.cedula, None, 1, filename, f'uploads/curriculum/{filename}'))
+                                ''', (None, 'curriculum', filename, f'uploads/curriculum/{filename}', os.path.getsize(curriculum_path)))
                                 conn.commit()
                                 print("Documento insertado correctamente")
                         except Exception as doc_error:
@@ -862,9 +862,9 @@ def nuevo_candidato():
                             cursor = conn.cursor()
                             print(f"Intentando insertar documento: {filename}")
                             cursor.execute('''
-                                INSERT INTO documentos (cedula, id_postulacion, id_tipo, nombre_archivo, ruta_archivo)
+                                INSERT INTO documentos (id_postulacion, tipo_documento, nombre_archivo, ruta_archivo, tamano_archivo)
                                 VALUES (%s, %s, %s, %s, %s)
-                            ''', (candidato.cedula, None, 1, filename, f'uploads/curriculum/{filename}'))
+                            ''', (None, 'curriculum', filename, f'uploads/curriculum/{filename}', os.path.getsize(curriculum_path)))
                             conn.commit()
                             print("Documento insertado correctamente")
                     except Exception as doc_error:
