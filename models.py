@@ -391,36 +391,18 @@ class Candidato:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             try:
+                # Usar valores correctos según tipo de BD
+                if db.db_type == 'postgresql':
+                    activo_value = 'TRUE' if self.activo else 'FALSE'
+                else:
+                    activo_value = 1 if self.activo else 0
+                
                 # Verificar si el candidato ya existe
                 cursor.execute('SELECT cedula FROM candidatos WHERE cedula = %s', (self.cedula,))
                 existing = cursor.fetchone()
                 
                 if existing:
                     # Actualizar candidato existente
-                    cursor.execute('''
-                        UPDATE candidatos SET nombre=%s, apellido=%s, email=%s, telefono=%s, resumen=%s, 
-                        habilidades=%s, experiencia_anos=%s, nivel_educativo=%s, direccion_domicilio=%s,
-                        disponibilidad=%s, salario_esperado=%s, activo=%s
-                        WHERE cedula=%s
-                    ''', (self.nombre, self.apellido, self.email, self.telefono, self.resumen,
-                          habilidades_json, self.experiencia_anos, self.nivel_educativo,
-                          self.direccion_domicilio, self.disponibilidad, self.salario_esperado, 
-                          self.activo, self.cedula))
-                else:
-                    # Insertar nuevo candidato
-                    cursor.execute('''
-                        INSERT INTO candidatos (cedula, nombre, apellido, email, telefono, resumen,
-                        habilidades, experiencia_anos, nivel_educativo, direccion_domicilio, 
-                        disponibilidad, salario_esperado, activo)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ''', (self.cedula, self.nombre, self.apellido, self.email, self.telefono, self.resumen,
-                          habilidades_json, self.experiencia_anos, self.nivel_educativo,
-                          self.direccion_domicilio, self.disponibilidad, self.salario_esperado, self.activo))
-                
-                conn.commit()
-                return self.cedula
-            except pymysql.err.IntegrityError:
-                # Email duplicado
                 raise Exception("El email ya está registrado")
     
     @classmethod
