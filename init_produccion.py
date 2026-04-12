@@ -9,6 +9,20 @@ import os
 from database import db, get_db_type
 from models import Usuario
 
+def _get_count_from_cursor(cursor, table_name):
+    """Obtiene el valor COUNT(*) compatible con dict (PostgreSQL) y tuple (SQLite/MySQL)"""
+    cursor.execute(f"SELECT COUNT(*) as count FROM {table_name}")
+    row = cursor.fetchone()
+    if row is None:
+        return 0
+    
+    # Si es tupla/lista (SQLite/MySQL), usar índice
+    if isinstance(row, (tuple, list)):
+        return row[0]
+    # Si es diccionario (PostgreSQL), usar clave
+    else:
+        return row.get('count', 0)
+
 def inicializar_produccion():
     """Inicializa la base de datos completa para producción de forma idempotente"""
     
@@ -100,8 +114,7 @@ def verificar_y_crear_datos_iniciales():
             cursor = conn.cursor()
             
             # Verificar si hay sucursales
-            cursor.execute("SELECT COUNT(*) FROM sucursales")
-            if cursor.fetchone()[0] == 0:
+            if _get_count_from_cursor(cursor, 'sucursales') == 0:
                 print(" Creando sucursal por defecto...")
                 if db.db_type == 'postgresql':
                     cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)", ('Matriz', 1))
@@ -110,8 +123,7 @@ def verificar_y_crear_datos_iniciales():
                 print(" Sucursal 'Matriz' creada")
             
             # Verificar si hay cargos de ejemplo
-            cursor.execute("SELECT COUNT(*) FROM cargos")
-            if cursor.fetchone()[0] == 0:
+            if _get_count_from_cursor(cursor, 'cargos') == 0:
                 print(" Creando cargos de ejemplo...")
                 cargos_ejemplo = [
                     ('Desarrollador Python', 'Desarrollo de aplicaciones web Python', 'TI', 1500.00, 2500.00, 'Tiempo completo', 1),

@@ -186,6 +186,20 @@ class DatabaseManager:
             if conn:
                 conn.close()
     
+    def _get_count_from_cursor(self, cursor, table_name):
+        """Obtiene el valor COUNT(*) compatible con dict (PostgreSQL) y tuple (SQLite/MySQL)"""
+        cursor.execute(f"SELECT COUNT(*) as count FROM {table_name}")
+        row = cursor.fetchone()
+        if row is None:
+            return 0
+        
+        # Si es tupla/lista (SQLite/MySQL), usar índice
+        if isinstance(row, (tuple, list)):
+            return row[0]
+        # Si es diccionario (PostgreSQL), usar clave
+        else:
+            return row.get('count', 0)
+    
     def ejecutar_consulta(self, query: str, params=None, fetch_one=False, fetch_all=False):
         """Método universal para ejecutar consultas"""
         with self.get_connection() as conn:
@@ -240,8 +254,7 @@ class DatabaseManager:
             cursor.execute(roles_sql)
             
             # Insertar roles por defecto
-            cursor.execute("SELECT COUNT(*) FROM roles")
-            if cursor.fetchone()[0] == 0:
+            if self._get_count_from_cursor(cursor, 'roles') == 0:
                 roles_data = [
                     (1, 'admin', 'Administrador del sistema'),
                     (2, 'reclutador', 'Reclutador de personal'),
@@ -277,8 +290,7 @@ class DatabaseManager:
             cursor.execute(sucursales_sql)
             
             # Insertar sucursal por defecto
-            cursor.execute("SELECT COUNT(*) FROM sucursales")
-            if cursor.fetchone()[0] == 0:
+            if self._get_count_from_cursor(cursor, 'sucursales') == 0:
                 if self.db_type == 'postgresql':
                     cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)", ('Matriz', 1))
                 else:
@@ -378,8 +390,7 @@ class DatabaseManager:
             cursor.execute(estudios_sql)
             
             # Insertar niveles educativos
-            cursor.execute("SELECT COUNT(*) FROM estudios")
-            if cursor.fetchone()[0] == 0:
+            if self._get_count_from_cursor(cursor, 'estudios') == 0:
                 niveles_data = [
                     ('Bachiller',),
                     ('Técnico',),
