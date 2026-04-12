@@ -27,13 +27,23 @@ class Usuario(UserMixin):
     
     @classmethod
     def from_row(cls, row: Dict) -> 'Usuario':
+        def safe_bool(value, default=True):
+            """Convierte booleanos de PostgreSQL/SQLite de forma segura"""
+            if value is None:
+                return default
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, (int, str)):
+                return bool(int(value))
+            return default
+        
         return cls(
             id_usuario=row.get('id_usuario'),
             nombre_usuario=row.get('nombre_usuario', ''),
             email=row.get('email', ''),
             password_hash=row.get('password_hash', ''),
             rol_id=row.get('rol_id', 4),
-            activo=bool(row.get('activo', True)),
+            activo=safe_bool(row.get('activo'), True),
             created_at=row.get('created_at'),
             ultimo_acceso=row.get('ultimo_acceso'),
             rol_nombre=row.get('rol_nombre', 'candidato')
