@@ -88,6 +88,7 @@ def require_role(roles):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
+        print("LOGIN DEBUG: Usuario ya autenticado, redirigiendo a index")
         return redirect(url_for('index'))
     
     form = LoginForm()
@@ -109,9 +110,16 @@ def login():
                 if password_check:
                     print("LOGIN DEBUG: Login exitoso, iniciando sesión...")
                     login_user(usuario, remember=True)
+                    print("LOGIN DEBUG: Sesión iniciada correctamente")
+                    
                     siguiente = request.args.get('next')
+                    print(f"LOGIN DEBUG: Next URL: {siguiente}")
+                    
                     if siguiente and siguiente.startswith('/'):
+                        print(f"LOGIN DEBUG: Redirigiendo a: {siguiente}")
                         return redirect(siguiente)
+                    
+                    print("LOGIN DEBUG: Redirigiendo a index...")
                     flash(f'¡Bienvenido {usuario.nombre_usuario}!', 'success')
                     return redirect(url_for('index'))
                 else:
@@ -208,28 +216,63 @@ def logout():
 
 @app.route('/')
 def index():
+    print("INDEX DEBUG: Entrando a ruta index")
+    
     if not current_user.is_authenticated:
+        print("INDEX DEBUG: Usuario no autenticado, redirigiendo a login")
         return redirect(url_for('login'))
+    
+    print(f"INDEX DEBUG: Usuario autenticado: {current_user.nombre_usuario}, Rol: {current_user.rol_nombre}")
     
     # Dashboard diferenciado por rol
     if current_user.rol_nombre == 'candidato':
+        print("INDEX DEBUG: Es candidato, verificando perfil...")
         # Verificar si el candidato tiene perfil completo
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT cedula FROM candidatos WHERE email = %s LIMIT 1', (current_user.email,))
-            candidato = cursor.fetchone()
-        
-        if not candidato:
-            flash('Debes completar tu perfil de candidato para continuar', 'warning')
-            return redirect(url_for('completar_perfil_candidato'))
-        
-        # Candidatos ven cargos disponibles
-        cargos = Cargo.get_all(estado='Activo')
-        return render_template('candidato/dashboard.html', cargos=cargos)
+        try:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT cedula FROM candidatos WHERE email = %s LIMIT 1', (current_user.email,))
+                candidato = cursor.fetchone()
+            
+            if not candidato:
+                print("INDEX DEBUG: Candidato sin perfil, redirigiendo a completar perfil")
+                flash('Debes completar tu perfil de candidato para continuar', 'warning')
+                return redirect(url_for('completar_perfil_candidato'))
+            
+            # Candidatos ven cargos disponibles
+            print("INDEX DEBUG: Obteniendo cargos activos...")
+            cargos = Cargo.get_all(estado='Activo')
+            print(f"INDEX DEBUG: Cargos encontrados: {len(cargos)}")
+            return render_template('candidato/dashboard.html', cargos=cargos)
+        except Exception as e:
+            print(f"INDEX ERROR: Error en dashboard candidato: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Error al cargar dashboard: {str(e)}', 'error')
+            return render_template('candidato/dashboard.html', cargos=[])
     else:
+        print("INDEX DEBUG: Es admin/reclutador/gerente, obteniendo estadísticas...")
         # Administrador, reclutador y gerente ven estadísticas
-        stats = EstadisticasRRHH.get_dashboard_stats()
-        return render_template('index.html', stats=stats)
+        try:
+            print("INDEX DEBUG: Llamando a EstadisticasRRHH.get_dashboard_stats()...")
+            stats = EstadisticasRRHH.get_dashboard_stats()
+            print(f"INDEX DEBUG: Estadísticas obtenidas: {stats}")
+            return render_template('index.html', stats=stats)
+        except Exception as e:
+            print(f"INDEX ERROR: Error en EstadisticasRRHH.get_dashboard_stats(): {e}")
+            import traceback
+            traceback.print_exc()
+            # Estadísticas por defecto si hay error
+            stats = {
+                'total_candidatos': 0,
+                'candidatos_activos': 0,
+                'total_postulaciones': 0,
+                'postulaciones_pendientes': 0,
+                'total_cargos': 0,
+                'cargos_activos': 0
+            }
+            flash(f'Error al cargar estadísticas: {str(e)}', 'error')
+            return render_template('index.html', stats=stats)
 
 @app.route('/about')
 def about():
