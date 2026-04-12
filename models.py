@@ -8,6 +8,10 @@ from database import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
+def get_active_value():
+    """Obtiene el valor correcto para 'activo' según el tipo de BD"""
+    return 'TRUE' if db.db_type == 'postgresql' else '1'
+
 @dataclass
 class Usuario(UserMixin):
     """Modelo para autenticación de usuarios"""
@@ -129,11 +133,12 @@ class Usuario(UserMixin):
         """Obtiene usuario por nombre de usuario"""
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            cursor.execute(f'''
                 SELECT u.*, r.nombre as rol_nombre 
                 FROM usuarios u
                 LEFT JOIN roles r ON u.rol_id = r.id_rol
-                WHERE u.nombre_usuario = %s AND u.activo = 1
+                WHERE u.nombre_usuario = %s AND u.activo = {get_active_value()}
+                LIMIT 1
             ''', (nombre_usuario,))
             row = cursor.fetchone()
             return cls.from_row(row) if row else None
@@ -143,11 +148,12 @@ class Usuario(UserMixin):
         """Obtiene usuario por email"""
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            cursor.execute(f'''
                 SELECT u.*, r.nombre as rol_nombre 
                 FROM usuarios u
                 LEFT JOIN roles r ON u.rol_id = r.id_rol
-                WHERE u.email = %s AND u.activo = 1
+                WHERE u.email = %s AND u.activo = {get_active_value()}
+                LIMIT 1
             ''', (email,))
             row = cursor.fetchone()
             return cls.from_row(row) if row else None
@@ -157,11 +163,18 @@ class Usuario(UserMixin):
         """Obtiene usuario por email O nombre_usuario - para flexibilidad en login"""
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            
+            # Usar valor según tipo de base de datos
+            if db.db_type == 'postgresql':
+                active_value = 'TRUE'
+            else:
+                active_value = '1'
+            
+            cursor.execute(f'''
                 SELECT u.*, r.nombre as rol_nombre 
                 FROM usuarios u
                 LEFT JOIN roles r ON u.rol_id = r.id_rol
-                WHERE (u.email = %s OR u.nombre_usuario = %s) AND u.activo = 1
+                WHERE (u.email = %s OR u.nombre_usuario = %s) AND u.activo = {active_value}
                 LIMIT 1
             ''', (credential, credential))
             row = cursor.fetchone()
@@ -172,11 +185,12 @@ class Usuario(UserMixin):
         """Obtiene usuario por ID"""
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            cursor.execute(f'''
                 SELECT u.*, r.nombre as rol_nombre 
                 FROM usuarios u
                 LEFT JOIN roles r ON u.rol_id = r.id_rol
-                WHERE u.id_usuario = %s AND u.activo = 1
+                WHERE u.id_usuario = %s AND u.activo = {get_active_value()}
+                LIMIT 1
             ''', (id_usuario,))
             row = cursor.fetchone()
             return cls.from_row(row) if row else None
