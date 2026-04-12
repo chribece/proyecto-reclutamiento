@@ -846,26 +846,6 @@ class Experiencia:
                     (cedula, empresa, cargo, fecha_inicio, fecha_fin, actual, descripcion)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ''', (self.cedula, self.empresa, self.cargo,
-                      self.fecha_inicio, self.fecha_fin, self.actual, self.descripcion))
-                return cursor.lastrowid
-
-
-class EstadisticasRRHH:
-    @staticmethod
-    def get_dashboard_stats() -> Dict[str, Any]:
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute('SELECT COUNT(*) as count FROM cargos WHERE estado = "Activo"')
-            cargos_activos = cursor.fetchone().get('count', 0)
-            
-            cursor.execute('SELECT COUNT(*) as count FROM candidatos WHERE activo = 1')
-            total_candidatos = cursor.fetchone().get('count', 0)
-            
-            cursor.execute('SELECT COUNT(*) as count FROM postulaciones')
-            total_postulaciones = cursor.fetchone().get('count', 0)
-            
-            cursor.execute('''
                 SELECT estado, COUNT(*) as total 
                 FROM postulaciones 
                 GROUP BY estado
@@ -942,3 +922,73 @@ class EstadoPipeline:
     def puede_transicionar(cls, estado_actual: str, nuevo_estado: str) -> bool:
         """Verificar si se puede transicionar de un estado a otro"""
         return nuevo_estado in cls.get_siguientes_estados(estado_actual)
+
+
+@dataclass
+class EstadisticasRRHH:
+    """Clase para estadísticas de RRHH"""
+    
+    @classmethod
+    def get_dashboard_stats() -> Dict[str, Any]:
+        """Obtener estadísticas para el dashboard"""
+        try:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Cargos activos
+                cursor.execute('SELECT COUNT(*) as count FROM cargos WHERE estado = %s', ('Activo',))
+                result = cursor.fetchone()
+                cargos_activos = result['count'] if isinstance(result, dict) else result[0]
+                
+                # Total candidatos
+                cursor.execute('SELECT COUNT(*) as count FROM candidatos WHERE activo = %s', (1,))
+                result = cursor.fetchone()
+                total_candidatos = result['count'] if isinstance(result, dict) else result[0]
+                
+                # Candidatos activos
+                cursor.execute('SELECT COUNT(*) as count FROM candidatos WHERE activo = %s', (1,))
+                result = cursor.fetchone()
+                candidatos_activos = result['count'] if isinstance(result, dict) else result[0]
+                
+                # Total postulaciones
+                cursor.execute('SELECT COUNT(*) as count FROM postulaciones')
+                result = cursor.fetchone()
+                total_postulaciones = result['count'] if isinstance(result, dict) else result[0]
+                
+                # Postulaciones por estado
+                cursor.execute('''
+                    SELECT estado, COUNT(*) as total 
+                    FROM postulaciones 
+                    GROUP BY estado
+                ''')
+                por_estado = {row['estado']: row['total'] for row in cursor.fetchall()}
+                
+                # Postulaciones pendientes
+                postulaciones_pendientes = por_estado.get('Recibido', 0) + por_estado.get('En revision', 0)
+                
+                # Total cargos
+                cursor.execute('SELECT COUNT(*) as count FROM cargos')
+                result = cursor.fetchone()
+                total_cargos = result['count'] if isinstance(result, dict) else result[0]
+                
+                return {
+                    'cargos_activos': cargos_activos,
+                    'total_candidatos': total_candidatos,
+                    'candidatos_activos': candidatos_activos,
+                    'total_postulaciones': total_postulaciones,
+                    'postulaciones_pendientes': postulaciones_pendientes,
+                    'total_cargos': total_cargos,
+                    'por_estado': por_estado
+                }
+        except Exception as e:
+            print(f"Error en get_dashboard_stats: {e}")
+            # Retornar valores por defecto si hay error
+            return {
+                'cargos_activos': 0,
+                'total_candidatos': 0,
+                'candidatos_activos': 0,
+                'total_postulaciones': 0,
+                'postulaciones_pendientes': 0,
+                'total_cargos': 0,
+                'por_estado': {}
+            }
