@@ -100,20 +100,32 @@ class Usuario(UserMixin):
             cursor = conn.cursor()
             try:
                 if self.id_usuario:
-                    cursor.execute('''
+                    # Usar valores correctos según tipo de BD
+                    if db.db_type == 'postgresql':
+                        activo_value = 'TRUE' if self.activo else 'FALSE'
+                    else:
+                        activo_value = 1 if self.activo else 0
+                    
+                    cursor.execute(f'''
                         UPDATE usuarios 
                         SET nombre_usuario=%s, email=%s, password_hash=%s, 
-                            rol_id=%s, activo=%s, ultimo_acceso=NOW()
-                        WHERE id_usuario=%s
+                            rol_id=%s, activo={activo_value}, ultimo_acceso=NOW()
+                            WHERE id_usuario=%s
                     ''', (self.nombre_usuario, self.email, self.password_hash,
-                          self.rol_id, self.activo, self.id_usuario))
+                          self.rol_id, self.id_usuario))
                     return self.id_usuario
                 else:
-                    cursor.execute('''
+                    # Usar valores correctos según tipo de BD
+                    if db.db_type == 'postgresql':
+                        activo_value = 'TRUE' if self.activo else 'FALSE'
+                    else:
+                        activo_value = 1 if self.activo else 0
+                    
+                    cursor.execute(f'''
                         INSERT INTO usuarios (nombre_usuario, email, password_hash, rol_id, activo)
-                        VALUES (%s, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, {activo_value})
                     ''', (self.nombre_usuario, self.email, self.password_hash,
-                          self.rol_id, self.activo))
+                          self.rol_id))
                     return cursor.lastrowid
             except (pymysql.err.IntegrityError, sqlite3.IntegrityError) as e:
                 # Manejar duplicados de forma compatible con ambos motores
