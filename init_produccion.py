@@ -94,9 +94,9 @@ def crear_usuarios_produccion_idempotente():
                 usuario = Usuario(
                     nombre_usuario=usuario_data['nombre_usuario'],
                     email=usuario_data['email'],
-                    password=usuario_data['password'],
                     rol_id=usuario_data['rol_id']
                 )
+                usuario.set_password(usuario_data['password'])
                 usuario.save()
                 print(f" Usuario creado: {usuario_data['email']} ({usuario_data['nombre_completo']})")
             else:
