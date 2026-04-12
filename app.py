@@ -20,11 +20,17 @@ if os.environ.get('FLASK_ENV') == 'production' and os.environ.get('RENDER'):
     with app.app_context():
         try:
             from init_produccion import inicializar_produccion
-            inicializar_produccion()
-            print("✅ Producción inicializada correctamente")
+            # Ejecutar en thread separado para no bloquear el inicio
+            import threading
+            def init_thread():
+                try:
+                    inicializar_produccion()
+                    print("✅ Producción inicializada")
+                except Exception as e:
+                    print(f"⚠️ Error en init: {e}")
+            threading.Thread(target=init_thread).start()
         except Exception as e:
-            print(f"⚠️ Error en inicialización (puede ser normal si ya está inicializado): {e}")
-
+            print(f"⚠️ Error importando init: {e}")
 # Configurar Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -1356,6 +1362,15 @@ def crear_usuario_admin():
             flash(f'Error al crear el usuario: {str(e)}', 'error')
     
     return render_template('admin/usuarios_crear.html', form=form)
+# ============ HEALTH CHECK PARA RENDER ============
+@app.route('/api/health')
+def health_check():
+    """Endpoint para verificar que la app está viva (usado por Render)"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'service': 'reclutamiento-web'
+    }), 200
 
 if __name__ == '__main__':
     # Configuración para desarrollo local
