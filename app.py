@@ -227,10 +227,10 @@ def completar_perfil_candidato():
             
             # Cargar referencias existentes
             cursor.execute('''
-                SELECT id, nombre, telefono, relacion, descripcion 
+                SELECT id_referencia, nombre, telefono, relacion, descripcion 
                 FROM referencias_personales 
                 WHERE cedula = %s 
-                ORDER BY id
+                ORDER BY id_referencia
             ''', (candidato.cedula,))
             referencias = [Referencia.from_row(r) for r in cursor.fetchall()]
             
@@ -365,20 +365,22 @@ def completar_perfil_candidato():
                         curriculum_path = os.path.join(upload_dir, filename)
                         curriculum_file.save(curriculum_path)
                         
+                        # TEMPORALMENTE DESACTIVADO - Subida de CV
                         # Guardar registro del documento en la base de datos
-                        try:
-                            with db.get_connection() as conn:
-                                cursor = conn.cursor()
-                                print(f"Intentando insertar documento: {filename}")
-                                cursor.execute('''
-                                    INSERT INTO documentos (id_postulacion, tipo_documento, nombre_archivo, ruta_archivo, tamano_archivo)
-                                    VALUES (%s, %s, %s, %s, %s)
-                                ''', (None, 'curriculum', filename, f'uploads/curriculum/{filename}', os.path.getsize(curriculum_path)))
-                                conn.commit()
-                                print("Documento insertado correctamente")
-                        except Exception as doc_error:
-                            print(f"Error al insertar documento: {str(doc_error)}")
-                            flash(f'Error al guardar el registro del documento: {str(doc_error)}', 'error')
+                        # try:
+                        #     with db.get_connection() as conn:
+                        #         cursor = conn.cursor()
+                        #         print(f"Intentando insertar documento: {filename}")
+                        #         cursor.execute('''
+                        #             INSERT INTO documentos (id_postulacion, tipo_documento, nombre_archivo, ruta_archivo, tamano_archivo)
+                        #             VALUES (%s, %s, %s, %s, %s)
+                        #         ''', (None, 'curriculum', filename, f'uploads/curriculum/{filename}', os.path.getsize(curriculum_path)))
+                        #         conn.commit()
+                        #         print("Documento insertado correctamente")
+                        # except Exception as doc_error:
+                        #     print(f"Error al insertar documento: {str(doc_error)}")
+                        #     flash(f'Error al guardar el registro del documento: {str(doc_error)}', 'error')
+                        print("Subida de CV temporalmente desactivada")
                 
                 flash(' Perfil de candidato completado exitosamente', 'success')
                 return redirect(url_for('index'))
@@ -856,20 +858,22 @@ def nuevo_candidato():
                     curriculum_path = os.path.join(upload_dir, filename)
                     curriculum_file.save(curriculum_path)
                     
+                    # TEMPORALMENTE DESACTIVADO - Subida de CV
                     # Guardar registro del documento en la base de datos
-                    try:
-                        with db.get_connection() as conn:
-                            cursor = conn.cursor()
-                            print(f"Intentando insertar documento: {filename}")
-                            cursor.execute('''
-                                INSERT INTO documentos (id_postulacion, tipo_documento, nombre_archivo, ruta_archivo, tamano_archivo)
-                                VALUES (%s, %s, %s, %s, %s)
-                            ''', (None, 'curriculum', filename, f'uploads/curriculum/{filename}', os.path.getsize(curriculum_path)))
-                            conn.commit()
-                            print("Documento insertado correctamente")
-                    except Exception as doc_error:
-                        print(f"Error al insertar documento: {str(doc_error)}")
-                        flash(f'Error al guardar el registro del documento: {str(doc_error)}', 'error')
+                    # try:
+                    #     with db.get_connection() as conn:
+                    #         cursor = conn.cursor()
+                    #         print(f"Intentando insertar documento: {filename}")
+                    #         cursor.execute('''
+                    #             INSERT INTO documentos (id_postulacion, tipo_documento, nombre_archivo, ruta_archivo, tamano_archivo)
+                    #             VALUES (%s, %s, %s, %s, %s)
+                    #         ''', (None, 'curriculum', filename, f'uploads/curriculum/{filename}', os.path.getsize(curriculum_path)))
+                    #         conn.commit()
+                    #         print("Documento insertado correctamente")
+                    # except Exception as doc_error:
+                    #     print(f"Error al insertar documento: {str(doc_error)}")
+                    #     flash(f'Error al guardar el registro del documento: {str(doc_error)}', 'error')
+                    print("Subida de CV temporalmente desactivada")
             
             # Crear postulación automática
             postulacion = Postulacion(
