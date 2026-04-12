@@ -15,6 +15,16 @@ from functools import wraps
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Inicialización automática para producción (Render)
+if os.environ.get('FLASK_ENV') == 'production' and os.environ.get('RENDER'):
+    with app.app_context():
+        try:
+            from init_produccion import inicializar_produccion
+            inicializar_produccion()
+            print("✅ Producción inicializada correctamente")
+        except Exception as e:
+            print(f"⚠️ Error en inicialización (puede ser normal si ya está inicializado): {e}")
+
 # Configurar Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -1352,10 +1362,5 @@ if __name__ == '__main__':
     app.run(debug=True, port=5000)
 else:
     # Configuración para producción (Render.com)
-    # Inicializar base de datos automáticamente en producción
-    try:
-        from init_produccion import inicializar_produccion
-        inicializar_produccion()
-    except Exception as e:
-        print(f"Error al inicializar producción: {e}")
-        pass
+    # Render establece las variables de entorno automáticamente
+    pass

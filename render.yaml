@@ -16,11 +16,8 @@ services:
     plan: free
     region: oregon
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"  # Mejor que python app.py para producción
+    startCommand: "python init_produccion.py && gunicorn app:app"  # Inicializa y luego inicia Gunicorn
     healthCheckPath: /api/health  # Importante para que Render sepa que está listo
-    
-    # COMANDO CLAVE: Ejecuta el seed antes de iniciar la app
-    preDeployCommand: "python init_produccion.py"
     
     envVars:
       - key: FLASK_ENV
