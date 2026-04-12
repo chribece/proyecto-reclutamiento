@@ -92,17 +92,41 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        # Buscar por email O nombre_usuario
-        usuario = Usuario.get_by_email_or_username(form.email.data)
-        if usuario and usuario.check_password(form.password.data):
-            login_user(usuario, remember=True)
-            siguiente = request.args.get('next')
-            if siguiente and siguiente.startswith('/'):
-                return redirect(siguiente)
-            flash(f'¡Bienvenido {usuario.nombre_usuario}!', 'success')
-            return redirect(url_for('index'))
-        else:
-            flash('Usuario/email o contraseña incorrectos', 'error')
+        try:
+            print(f"LOGIN DEBUG: Intentando login con email: {form.email.data}")
+            
+            # Buscar por email O nombre_usuario
+            usuario = Usuario.get_by_email_or_username(form.email.data)
+            print(f"LOGIN DEBUG: Usuario encontrado: {usuario is not None}")
+            
+            if usuario:
+                print(f"LOGIN DEBUG: Usuario datos - ID: {usuario.id_usuario}, Nombre: {usuario.nombre_usuario}, Activo: {usuario.activo}, Rol: {usuario.rol_nombre}")
+                
+                # Probar contraseña
+                password_check = usuario.check_password(form.password.data)
+                print(f"LOGIN DEBUG: Contraseña correcta: {password_check}")
+                
+                if password_check:
+                    print("LOGIN DEBUG: Login exitoso, iniciando sesión...")
+                    login_user(usuario, remember=True)
+                    siguiente = request.args.get('next')
+                    if siguiente and siguiente.startswith('/'):
+                        return redirect(siguiente)
+                    flash(f'¡Bienvenido {usuario.nombre_usuario}!', 'success')
+                    return redirect(url_for('index'))
+                else:
+                    print("LOGIN DEBUG: Contraseña incorrecta")
+            else:
+                print("LOGIN DEBUG: Usuario no encontrado")
+                
+        except Exception as e:
+            print(f"LOGIN ERROR: Error durante login: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Error en el sistema: {str(e)}', 'error')
+            return render_template('login.html', form=form)
+        
+        flash('Usuario/email o contraseña incorrectos', 'error')
     
     return render_template('login.html', form=form)
 
@@ -1378,6 +1402,84 @@ def crear_usuario_admin():
     
     return render_template('admin/usuarios_crear.html', form=form)
 # ============ HEALTH CHECK PARA RENDER ============
+@app.route('/debug/auth')
+def debug_auth_endpoint():
+    """Endpoint de diagnóstico para autenticación"""
+    try:
+        from datetime import datetime
+        from database import db, get_db_type
+        from models import Usuario
+        
+        debug_info = {
+            'timestamp': datetime.now().isoformat(),
+            'db_type': get_db_type(),
+            'connection_test': False,
+            'users_count': 0,
+            'roles_count': 0,
+            'admin_user': None,
+            'error': None
+        }
+        
+        # Probar conexión
+        try:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1 as test, NOW() as tiempo")
+                result = cursor.fetchone()
+                debug_info['connection_test'] = True
+                debug_info['connection_result'] = str(result)
+        except Exception as e:
+            debug_info['error'] = f"Connection error: {str(e)}"
+            return jsonify(debug_info)
+        
+        # Contar usuarios
+        try:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) as count FROM usuarios")
+                result = cursor.fetchone()
+                debug_info['users_count'] = result['count'] if isinstance(result, dict) else result[0]
+        except Exception as e:
+            debug_info['error'] = f"Users count error: {str(e)}"
+        
+        # Contar roles
+        try:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) as count FROM roles")
+                result = cursor.fetchone()
+                debug_info['roles_count'] = result['count'] if isinstance(result, dict) else result[0]
+        except Exception as e:
+            debug_info['error'] = f"Roles count error: {str(e)}"
+        
+        # Probar usuario admin
+        try:
+            admin_user = Usuario.get_by_email_or_username('admin@reclutamiento.com')
+            if admin_user:
+                debug_info['admin_user'] = {
+                    'id': admin_user.id_usuario,
+                    'username': admin_user.nombre_usuario,
+                    'email': admin_user.email,
+                    'active': admin_user.activo,
+                    'role': admin_user.rol_nombre,
+                    'password_hash_length': len(admin_user.password_hash) if admin_user.password_hash else 0
+                }
+                
+                # Probar contraseña
+                debug_info['admin_user']['password_check'] = admin_user.check_password('Admin123!')
+            else:
+                debug_info['admin_user'] = 'NOT_FOUND'
+        except Exception as e:
+            debug_info['error'] = f"Admin user error: {str(e)}"
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({
+            'error': f"General error: {str(e)}",
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @app.route('/api/health')
 def health_check():
     """Endpoint para verificar que la app está viva (usado por Render)"""
