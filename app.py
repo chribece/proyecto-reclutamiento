@@ -1389,4 +1389,5 @@ if __name__ == '__main__':
 else:
     # Configuración para producción (Render.com)
     # Render establece las variables de entorno automáticamente
+    # La aplicación será servida por Gunicorn, no por Flask directamente
     pass
