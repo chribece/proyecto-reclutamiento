@@ -16,21 +16,23 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Inicialización automática para producción (Render)
+# Simplificado para evitar errores en health check
 if os.environ.get('FLASK_ENV') == 'production' and os.environ.get('RENDER'):
-    with app.app_context():
-        try:
-            from init_produccion import inicializar_produccion
-            # Ejecutar en thread separado para no bloquear el inicio
-            import threading
-            def init_thread():
-                try:
-                    inicializar_produccion()
-                    print("✅ Producción inicializada")
-                except Exception as e:
-                    print(f"⚠️ Error en init: {e}")
-            threading.Thread(target=init_thread).start()
-        except Exception as e:
-            print(f"⚠️ Error importando init: {e}")
+    try:
+        import threading
+        def init_thread():
+            try:
+                from init_produccion import inicializar_produccion
+                inicializar_produccion()
+                print("✅ Producción inicializada")
+            except Exception as e:
+                print(f"⚠️ Error en inicialización: {e}")
+        
+        # Inicializar en thread separado para no bloquear el inicio
+        threading.Thread(target=init_thread, daemon=True).start()
+    except Exception as e:
+        print(f"⚠️ Error configurando inicialización: {e}")
+
 # Configurar Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -1367,20 +1369,24 @@ def crear_usuario_admin():
 def health_check():
     """Endpoint para verificar que la app está viva (usado por Render)"""
     try:
-        # Health check simple sin depender de BD
+        # Health check ultra simple sin dependencias
+        import time
         return jsonify({
             'status': 'healthy',
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': int(time.time()),
             'service': 'reclutamiento-web',
-            'version': '1.0.0'
+            'version': '1.0.0',
+            'environment': os.environ.get('FLASK_ENV', 'unknown')
         }), 200
     except Exception as e:
         # Si algo falla, responder con error pero con código 200 para no detener el deploy
+        import time
         return jsonify({
             'status': 'unhealthy',
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': int(time.time()),
             'service': 'reclutamiento-web',
-            'error': str(e)
+            'error': str(e),
+            'environment': os.environ.get('FLASK_ENV', 'unknown')
         }), 200
 
 if __name__ == '__main__':
