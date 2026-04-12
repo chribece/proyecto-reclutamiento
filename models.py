@@ -26,28 +26,61 @@ class Usuario(UserMixin):
         return str(self.id_usuario)
     
     @classmethod
-    def from_row(cls, row: Dict) -> 'Usuario':
-        def safe_bool(value, default=True):
-            """Convierte booleanos de PostgreSQL/SQLite de forma segura"""
-            if value is None:
-                return default
-            if isinstance(value, bool):
-                return value
-            if isinstance(value, (int, str)):
-                return bool(int(value))
-            return default
-        
-        return cls(
-            id_usuario=row.get('id_usuario'),
-            nombre_usuario=row.get('nombre_usuario', ''),
-            email=row.get('email', ''),
-            password_hash=row.get('password_hash', ''),
-            rol_id=row.get('rol_id', 4),
-            activo=safe_bool(row.get('activo'), True),
-            created_at=row.get('created_at'),
-            ultimo_acceso=row.get('ultimo_acceso'),
-            rol_nombre=row.get('rol_nombre', 'candidato')
-        )
+    def from_row(cls, row) -> 'Usuario':
+        """Conversión ultra-simple y robusta"""
+        try:
+            # Manejar tanto diccionarios como tuplas
+            if isinstance(row, dict):
+                return cls(
+                    id_usuario=row.get('id_usuario'),
+                    nombre_usuario=row.get('nombre_usuario', ''),
+                    email=row.get('email', ''),
+                    password_hash=row.get('password_hash', ''),
+                    rol_id=row.get('rol_id', 4),
+                    activo=bool(row.get('activo')) if row.get('activo') is not None else True,
+                    created_at=row.get('created_at'),
+                    ultimo_acceso=row.get('ultimo_acceso'),
+                    rol_nombre=row.get('rol_nombre', 'candidato')
+                )
+            elif isinstance(row, (tuple, list)):
+                return cls(
+                    id_usuario=row[0] if len(row) > 0 else None,
+                    nombre_usuario=row[1] if len(row) > 1 else '',
+                    email=row[2] if len(row) > 2 else '',
+                    password_hash=row[3] if len(row) > 3 else '',
+                    rol_id=row[4] if len(row) > 4 else 4,
+                    activo=bool(row[5]) if len(row) > 5 and row[5] is not None else True,
+                    created_at=row[6] if len(row) > 6 else None,
+                    ultimo_acceso=row[7] if len(row) > 7 else None,
+                    rol_nombre=row[8] if len(row) > 8 else 'candidato'
+                )
+            else:
+                # Valores por defecto si no se puede procesar
+                return cls(
+                    id_usuario=None,
+                    nombre_usuario='',
+                    email='',
+                    password_hash='',
+                    rol_id=4,
+                    activo=True,
+                    created_at=None,
+                    ultimo_acceso=None,
+                    rol_nombre='candidato'
+                )
+        except Exception as e:
+            print(f"Error en from_row: {e}")
+            # Retornar usuario vacío en caso de error
+            return cls(
+                id_usuario=None,
+                nombre_usuario='',
+                email='',
+                password_hash='',
+                rol_id=4,
+                activo=True,
+                created_at=None,
+                ultimo_acceso=None,
+                rol_nombre='candidato'
+            )
     
     def set_password(self, password: str):
         """Hash y guarda la contraseña"""
