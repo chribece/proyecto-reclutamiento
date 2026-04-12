@@ -12,6 +12,15 @@ from datetime import datetime
 import os
 from functools import wraps
 
+# Fix de emergencia para autenticación
+try:
+    from emergency_auth_fix import emergency_auth_fix
+    print(" Ejecutando fix de emergencia para autenticación...")
+    emergency_auth_fix()
+    print(" Fix de autenticación completado")
+except Exception as e:
+    print(f" Error en fix de autenticación: {e}")
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
