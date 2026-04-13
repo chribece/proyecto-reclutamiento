@@ -628,10 +628,13 @@ class Postulacion:
             cursor = conn.cursor()
             
             # Construir consulta base
-            query = '''
+            # Usar helper para valor boolean según tipo de BD
+            from models import get_active_value
+            activo_value = get_active_value()
+            query = f'''
                 SELECT p.* FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = 1 AND p.activo = 1
+                WHERE c.activo = {activo_value} AND p.activo = {activo_value}
             '''
             params = []
             
@@ -666,10 +669,12 @@ class Postulacion:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             
-            query = '''
+            # Usar helper para valor boolean según tipo de BD
+            activo_value = get_active_value()
+            query = f'''
                 SELECT COUNT(*) as total FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = 1 AND p.activo = 1
+                WHERE c.activo = {activo_value} AND p.activo = {activo_value}
             '''
             params = []
             
@@ -687,10 +692,13 @@ class Postulacion:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             
-            query = '''
+            # Usar helpers para valores boolean según tipo de BD
+            activo_true = get_active_value()
+            activo_false = 'FALSE' if db.db_type == 'postgresql' else '0'
+            query = f'''
                 SELECT p.* FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = 1 AND p.activo = 0
+                WHERE c.activo = {activo_true} AND p.activo = {activo_false}
                 ORDER BY p.fecha_postulacion DESC
             '''
             
@@ -716,10 +724,13 @@ class Postulacion:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             
-            query = '''
+            # Usar helpers para valores boolean según tipo de BD
+            activo_true = get_active_value()
+            activo_false = 'FALSE' if db.db_type == 'postgresql' else '0'
+            query = f'''
                 SELECT COUNT(*) as total FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = 1 AND p.activo = 0
+                WHERE c.activo = {activo_true} AND p.activo = {activo_false}
             '''
             
             cursor.execute(query)
@@ -731,10 +742,12 @@ class Postulacion:
         """Obtener todas las postulaciones para un cargo específico"""
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            # Usar helper para valor boolean según tipo de BD
+            activo_value = get_active_value()
+            cursor.execute(f'''
                 SELECT p.* FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE p.id_cargo = %s AND c.activo = 1
+                WHERE p.id_cargo = %s AND c.activo = {activo_value}
                 ORDER BY p.fecha_postulacion DESC
             ''', (cargo_id,))
             

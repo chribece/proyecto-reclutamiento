@@ -117,7 +117,7 @@ class ReportGenerator:
                     FROM candidatos c
                     INNER JOIN postulaciones p ON c.cedula = p.cedula
                     INNER JOIN cargos cg ON p.id_cargo = cg.id_cargo
-                    WHERE p.id_cargo = %s AND c.activo = 1
+                    WHERE p.id_cargo = %s AND c.activo = TRUE
                     ORDER BY p.fecha_postulacion DESC
                 ''', (cargo_id,))
             else:
@@ -138,7 +138,7 @@ class ReportGenerator:
                     FROM candidatos c
                     INNER JOIN postulaciones p ON c.cedula = p.cedula
                     INNER JOIN cargos cg ON p.id_cargo = cg.id_cargo
-                    WHERE c.activo = 1
+                    WHERE c.activo = TRUE
                     ORDER BY p.fecha_postulacion DESC
                 ''')
             

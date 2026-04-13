@@ -72,10 +72,14 @@ class CargoForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(CargoForm, self).__init__(*args, **kwargs)
         # Cargar sucursales disponibles
-        from database import db
+        from database import db, get_db_type
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT id_sucursal, nombre FROM sucursales WHERE activa = 1 ORDER BY nombre')
+            # Usar valor correcto según tipo de BD
+            if get_db_type() == 'postgresql':
+                cursor.execute('SELECT id_sucursal, nombre FROM sucursales WHERE activa = TRUE ORDER BY nombre')
+            else:
+                cursor.execute('SELECT id_sucursal, nombre FROM sucursales WHERE activa = 1 ORDER BY nombre')
             self.id_sucursal.choices = [(row['id_sucursal'], row['nombre']) for row in cursor.fetchall()]
 
 
