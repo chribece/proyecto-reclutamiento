@@ -442,7 +442,12 @@ class Candidato:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             if activo is not None:
-                cursor.execute('SELECT * FROM candidatos WHERE activo = %s ORDER BY fecha_registro DESC', (int(activo),))
+                # Usar valor boolean correcto según tipo de BD
+                from database import get_db_type
+                if get_db_type() == 'postgresql':
+                    cursor.execute(f'SELECT * FROM candidatos WHERE activo = {str(activo).upper()} ORDER BY fecha_registro DESC')
+                else:
+                    cursor.execute('SELECT * FROM candidatos WHERE activo = %s ORDER BY fecha_registro DESC', (int(activo),))
             else:
                 cursor.execute('SELECT * FROM candidatos ORDER BY fecha_registro DESC')
             return [cls.from_row(row) for row in cursor.fetchall()]
@@ -460,8 +465,13 @@ class Candidato:
             
             # 1. Filtro activo
             if activo is not None:
-                conditions.append('activo = %s')
-                params.append(int(activo))
+                # Usar valor boolean correcto según tipo de BD
+                from database import get_db_type
+                if get_db_type() == 'postgresql':
+                    conditions.append(f'activo = {str(activo).upper()}')
+                else:
+                    conditions.append('activo = %s')
+                    params.append(int(activo))
             
             # 2. Filtro búsqueda (nombre, email, teléfono, habilidades)
             if busqueda:
