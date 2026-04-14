@@ -418,7 +418,7 @@ class Candidato:
                         INSERT INTO candidatos (cedula, nombre, apellido, email, telefono, resumen,
                         habilidades, experiencia_anos, nivel_educativo, direccion_domicilio, 
                         disponibilidad, salario_esperado, activo)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, {activo_value})
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, {activo_value})
                     ''', (self.cedula, self.nombre, self.apellido, self.email, self.telefono, self.resumen,
                           habilidades_json, self.experiencia_anos, self.nivel_educativo,
                           self.direccion_domicilio, self.disponibilidad, self.salario_esperado))
