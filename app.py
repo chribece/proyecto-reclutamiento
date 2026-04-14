@@ -852,10 +852,10 @@ def actualizar_perfil_candidato():
     with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT id, nombre, telefono, relacion, descripcion 
+            SELECT id_referencia, nombre, telefono, relacion, descripcion 
             FROM referencias_personales 
             WHERE cedula = %s 
-            ORDER BY id
+            ORDER BY id_referencia
         ''', (candidato.cedula,))
         referencias = [Referencia.from_row(r) for r in cursor.fetchall()]
         
@@ -1107,10 +1107,10 @@ def editar_candidato(cedula):
     with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT id, nombre, telefono, relacion, descripcion 
+            SELECT id_referencia, nombre, telefono, relacion, descripcion 
             FROM referencias_personales 
             WHERE cedula = %s 
-            ORDER BY id
+            ORDER BY id_referencia
         ''', (candidato.cedula,))
         referencias = [Referencia.from_row(r) for r in cursor.fetchall()]
         
