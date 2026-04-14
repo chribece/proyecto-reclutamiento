@@ -538,8 +538,7 @@ class Postulacion:
     fuente_reclutamiento: str = ""
     notas: str = ""
     puntaje_evaluacion: Optional[int] = None
-    fecha_actualizacion: Optional[datetime] = None
-    # Nota: La tabla postulaciones no tiene columna activo
+    # Notas: La tabla postulaciones no tiene columnas activo ni fecha_actualizacion
     
     candidato: Optional[Candidato] = None
     cargo: Optional[Cargo] = None
@@ -554,8 +553,7 @@ class Postulacion:
             estado=row.get('estado', 'Recibido'),
             fuente_reclutamiento=row.get('fuente_reclutamiento', ''),
             notas=row.get('notas', ''),
-            puntaje_evaluacion=row.get('puntaje_evaluacion'),
-            fecha_actualizacion=row.get('fecha_actualizacion')
+            puntaje_evaluacion=row.get('puntaje_evaluacion')
         )
     
     def save(self) -> int:
@@ -564,7 +562,7 @@ class Postulacion:
             if self.id_postulacion:
                 cursor.execute('''
                     UPDATE postulaciones SET estado=%s, fuente_reclutamiento=%s, 
-                    notas=%s, puntaje_evaluacion=%s, fecha_actualizacion=NOW()
+                    notas=%s, puntaje_evaluacion=%s
                     WHERE id_postulacion=%s
                 ''', (self.estado, self.fuente_reclutamiento, self.notas, 
                       self.puntaje_evaluacion, self.id_postulacion))
