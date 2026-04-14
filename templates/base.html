@@ -6,15 +6,15 @@
     <title>{% block title %}Sistema de Reclutamiento RRHH{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo-GF.ico') }}">
-<link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/logo-GF.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='Img/logo-GF.ico') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='Img/logo-GF.png') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar">
         <div class="navbar-container">
             <a href="{{ url_for('index') }}" class="navbar-brand">
-                <img src="{{ url_for('static', filename='img/logo-GF.png') }}" 
+                <img src="{{ url_for('static', filename='Img/logo-GF.png') }}" 
                     alt="Logo GF" 
                     style="height: 40px; width: auto; margin-right: 10px;">
                 REPUESTOS AUTOMOTRICES
