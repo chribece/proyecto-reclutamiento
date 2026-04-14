@@ -3,36 +3,30 @@
 ## 🔑 Usuarios del Sistema (Roles Administrativos)
 
 ### 👤 Administrador
-- **Email**: ` admin@reclutamiento.com `
+- **Email**: `admin@reclutamiento.com`
 - **Contraseña**: `Admin123!`
-- **Rol**: Administrador del sistema
-- **Permisos**: Acceso completo a todas las funcionalidades
+- **Rol**: admin
+- **Permisos**: Acceso completo a todas las funcionalidades (crear/editar/eliminar vacantes, postulaciones, candidatos, usuarios)
 
 ### 👥 Reclutador
-- **Email**: `reclutador@reclutamiento.com`
-- **Contraseña**: `Reclu123!`
-- **Rol**: Reclutador
-- **Permisos**: Gestión de cargos, candidatos y postulaciones
+- **Email**: `reclutador@empresa.com`
+- **Contraseña**: `Reclutador123!`
+- **Rol**: reclutador
+- **Permisos**: Gestión de cargos (crear/editar), candidatos y postulaciones (crear/editar/activar/desactivar)
 
-### 👔 Gerente de RRHH
-- **Email**: `gerente@reclutamiento.com`
-- **Contraseña**: ` `
-- **Rol**: Gerente
-- **Permisos**: Visualización de reportes y estadísticas
+### 👔 Gerente
+- **Email**: `gerente@empresa.com`
+- **Contraseña**: `Gerente123!`
+- **Rol**: gerente
+- **Permisos**: Gestión de cargos, candidatos y postulaciones + visualización de reportes y estadísticas
 
 ## 🎓 Candidatos de Prueba
 
-### Candidato 1 - Desarrollador
-- **Email**: `juan.perez@email.com`
-- **Contraseña**: `Candidato1!`
-- **Cédula**: `1234567890`
-- **Perfil**: Desarrollador Python con 5 años de experiencia
-
-### Candidato 2 - Diseñadora
-- **Email**: `maria.garcia@email.com`
-- **Contraseña**: `Candidato2!`
-- **Cédula**: `0987654321`
-- **Perfil**: Diseñadora UX/UI con 3 años de experiencia
+### Candidato 1
+- **Email**: `candidato@ejemplo.com`
+- **Contraseña**: `Candidato123!`
+- **Rol**: candidato
+- **Perfil**: Debe completar perfil antes de ver vacantes o postularse
 
 ## 🚀 Cómo Usar
 
