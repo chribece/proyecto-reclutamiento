@@ -691,7 +691,7 @@ def lista_cargos():
 
 @app.route('/cargos/nuevo', methods=['GET', 'POST'])
 @login_required
-@require_role(['admin', 'reclutador'])
+@require_role(['admin', 'reclutador', 'gerente'])
 def nuevo_cargo():
     print("CARGO DEBUG: Entrando a nuevo_cargo()")
     form = CargoForm()
@@ -733,7 +733,7 @@ def nuevo_cargo():
 
 @app.route('/cargos/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
-@require_role(['admin', 'reclutador'])
+@require_role(['admin', 'reclutador', 'gerente'])
 def editar_cargo(id):
     cargo = Cargo.get_by_id(id)
     if not cargo:
@@ -765,7 +765,7 @@ def editar_cargo(id):
 
 @app.route('/cargos/<int:id>/desactivar', methods=['POST'])
 @login_required
-@require_role(['admin', 'reclutador'])
+@require_role(['admin', 'reclutador', 'gerente'])
 def desactivar_cargo(id):
     """Desactiva un cargo (cambia estado a Inactivo)"""
     cargo = Cargo.get_by_id(id)
@@ -777,7 +777,7 @@ def desactivar_cargo(id):
 
 @app.route('/cargos/<int:id>/activar', methods=['POST'])
 @login_required
-@require_role(['admin', 'reclutador'])
+@require_role(['admin', 'reclutador', 'gerente'])
 def activar_cargo(id):
     """Activa un cargo (cambia estado a Activo)"""
     cargo = Cargo.get_by_id(id)
@@ -1297,7 +1297,7 @@ def lista_postulaciones():
 
 @app.route('/postulaciones/nueva', methods=['GET', 'POST'])
 @login_required
-@require_role(['admin', 'reclutador'])
+@require_role(['admin', 'reclutador', 'gerente'])
 def nueva_postulacion():
     form = PostulacionForm()
     if form.validate_on_submit():
@@ -1377,7 +1377,7 @@ def cambiar_estado_postulacion(id):
 
 @app.route('/postulaciones/<int:id>/desactivar', methods=['POST'])
 @login_required
-@require_role(['admin', 'reclutador'])
+@require_role(['admin', 'reclutador', 'gerente'])
 def desactivar_postulacion(id):
     """Desactiva una postulación (cambia activo a False)"""
     postulacion = Postulacion.get_by_id(id)
@@ -1389,7 +1389,7 @@ def desactivar_postulacion(id):
 
 @app.route('/postulaciones/<int:id>/activar', methods=['POST'])
 @login_required
-@require_role(['admin', 'reclutador'])
+@require_role(['admin', 'reclutador', 'gerente'])
 def activar_postulacion(id):
     """Activa una postulación (cambia activo a True)"""
     postulacion = Postulacion.get_by_id(id)
