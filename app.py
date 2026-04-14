@@ -175,8 +175,9 @@ def require_role(roles):
             if not current_user.is_authenticated:
                 flash('Por favor inicia sesión', 'warning')
                 return redirect(url_for('login'))
+            print(f"DEBUG ROLE: Usuario={current_user.nombre_usuario}, rol_nombre='{current_user.rol_nombre}', Requerido={roles}")
             if current_user.rol_nombre not in roles:
-                flash('No tienes permiso para acceder a esta página', 'error')
+                flash(f'No tienes permiso para acceder a esta página (rol: {current_user.rol_nombre})', 'error')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
         return decorated_function
