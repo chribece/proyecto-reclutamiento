@@ -89,9 +89,54 @@ def migrar_fecha_actualizacion():
     except Exception as e:
         print(f"⚠️ Error en migración fecha_actualizacion: {e}")
 
-# Ejecutar migración al inicio (en producción y desarrollo)
+# Migración automática: agregar activo a postulaciones si no existe
+def migrar_activo_postulaciones():
+    """Migración automática para agregar columna activo"""
+    try:
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            db_type = db.db_type
+            
+            if db_type == 'postgresql':
+                cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name='postulaciones' AND column_name='activo'
+                """)
+                if not cursor.fetchone():
+                    print("🔄 Migrando: Agregando columna activo a postulaciones...")
+                    cursor.execute("ALTER TABLE postulaciones ADD COLUMN activo BOOLEAN DEFAULT TRUE")
+                    conn.commit()
+                    print("✅ Migración completada: activo agregado")
+                else:
+                    print("✓ Columna activo ya existe")
+            elif db_type == 'sqlite':
+                cursor.execute("PRAGMA table_info(postulaciones)")
+                columns = [row['name'] for row in cursor.fetchall()]
+                if 'activo' not in columns:
+                    print("🔄 Migrando: Agregando columna activo a postulaciones...")
+                    cursor.execute("ALTER TABLE postulaciones ADD COLUMN activo BOOLEAN DEFAULT 1")
+                    conn.commit()
+                    print("✅ Migración completada: activo agregado")
+                else:
+                    print("✓ Columna activo ya existe")
+            else:
+                try:
+                    cursor.execute("ALTER TABLE postulaciones ADD COLUMN activo BOOLEAN DEFAULT TRUE")
+                    conn.commit()
+                    print("✅ Migración completada: activo agregado")
+                except Exception as e:
+                    if 'Duplicate' in str(e) or 'exists' in str(e).lower():
+                        print("✓ Columna activo ya existe")
+                    else:
+                        raise
+    except Exception as e:
+        print(f"⚠️ Error en migración activo: {e}")
+
+# Ejecutar migraciones al inicio
 try:
     migrar_fecha_actualizacion()
+    migrar_activo_postulaciones()
 except Exception as e:
     print(f"⚠️ Error ejecutando migración: {e}")
 

@@ -538,7 +538,8 @@ class Postulacion:
     fuente_reclutamiento: str = ""
     notas: str = ""
     puntaje_evaluacion: Optional[int] = None
-    # Notas: La tabla postulaciones no tiene columnas activo ni fecha_actualizacion
+    fecha_actualizacion: Optional[datetime] = None
+    activo: bool = True
     
     candidato: Optional[Candidato] = None
     cargo: Optional[Cargo] = None
@@ -553,25 +554,37 @@ class Postulacion:
             estado=row.get('estado', 'Recibido'),
             fuente_reclutamiento=row.get('fuente_reclutamiento', ''),
             notas=row.get('notas', ''),
-            puntaje_evaluacion=row.get('puntaje_evaluacion')
+            puntaje_evaluacion=row.get('puntaje_evaluacion'),
+            fecha_actualizacion=row.get('fecha_actualizacion'),
+            activo=bool(row.get('activo', True))
         )
     
     def save(self) -> int:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             if self.id_postulacion:
-                cursor.execute('''
+                # Usar valor boolean correcto según tipo de BD
+                if db.db_type == 'postgresql':
+                    activo_value = 'TRUE' if self.activo else 'FALSE'
+                else:
+                    activo_value = 1 if self.activo else 0
+                cursor.execute(f'''
                     UPDATE postulaciones SET estado=%s, fuente_reclutamiento=%s, 
-                    notas=%s, puntaje_evaluacion=%s
+                    notas=%s, puntaje_evaluacion=%s, fecha_actualizacion=NOW(), activo={activo_value}
                     WHERE id_postulacion=%s
                 ''', (self.estado, self.fuente_reclutamiento, self.notas, 
                       self.puntaje_evaluacion, self.id_postulacion))
                 return self.id_postulacion
             else:
-                cursor.execute('''
+                # Usar valor boolean correcto según tipo de BD
+                if db.db_type == 'postgresql':
+                    activo_value = 'TRUE' if self.activo else 'FALSE'
+                else:
+                    activo_value = 1 if self.activo else 0
+                cursor.execute(f'''
                     INSERT INTO postulaciones (cedula, id_cargo, estado, 
-                    fuente_reclutamiento, notas, puntaje_evaluacion)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    fuente_reclutamiento, notas, puntaje_evaluacion, activo)
+                    VALUES (%s, %s, %s, %s, %s, %s, {activo_value})
                 ''', (self.cedula, self.id_cargo, self.estado,
                       self.fuente_reclutamiento, self.notas, self.puntaje_evaluacion))
                 return cursor.lastrowid

@@ -380,6 +380,8 @@ class DatabaseManager:
                     id_cargo INTEGER NOT NULL,
                     estado VARCHAR(20) DEFAULT 'Recibido',
                     fecha_postulacion TIMESTAMP DEFAULT {timestamp_now},
+                    fecha_actualizacion TIMESTAMP,
+                    activo BOOLEAN DEFAULT TRUE,
                     fuente_reclutamiento VARCHAR(50),
                     notas TEXT,
                     puntaje_evaluacion INT
