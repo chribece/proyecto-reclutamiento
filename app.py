@@ -42,6 +42,59 @@ if os.environ.get('FLASK_ENV') == 'production' and os.environ.get('RENDER'):
     except Exception as e:
         print(f"⚠️ Error configurando inicialización: {e}")
 
+# Migración automática: agregar fecha_actualizacion a postulaciones si no existe
+def migrar_fecha_actualizacion():
+    """Migración automática para agregar columna fecha_actualizacion"""
+    try:
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            db_type = db.db_type
+            
+            if db_type == 'postgresql':
+                # Verificar si columna existe en PostgreSQL
+                cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name='postulaciones' AND column_name='fecha_actualizacion'
+                """)
+                if not cursor.fetchone():
+                    print("🔄 Migrando: Agregando columna fecha_actualizacion a postulaciones...")
+                    cursor.execute("ALTER TABLE postulaciones ADD COLUMN fecha_actualizacion TIMESTAMP")
+                    conn.commit()
+                    print("✅ Migración completada: fecha_actualizacion agregada")
+                else:
+                    print("✓ Columna fecha_actualizacion ya existe")
+            elif db_type == 'sqlite':
+                # SQLite: verificar con PRAGMA
+                cursor.execute("PRAGMA table_info(postulaciones)")
+                columns = [row['name'] for row in cursor.fetchall()]
+                if 'fecha_actualizacion' not in columns:
+                    print("🔄 Migrando: Agregando columna fecha_actualizacion a postulaciones...")
+                    cursor.execute("ALTER TABLE postulaciones ADD COLUMN fecha_actualizacion TIMESTAMP")
+                    conn.commit()
+                    print("✅ Migración completada: fecha_actualizacion agregada")
+                else:
+                    print("✓ Columna fecha_actualizacion ya existe")
+            else:
+                # MySQL y otros
+                try:
+                    cursor.execute("ALTER TABLE postulaciones ADD COLUMN fecha_actualizacion TIMESTAMP")
+                    conn.commit()
+                    print("✅ Migración completada: fecha_actualizacion agregada")
+                except Exception as e:
+                    if 'Duplicate' in str(e) or 'exists' in str(e).lower():
+                        print("✓ Columna fecha_actualizacion ya existe")
+                    else:
+                        raise
+    except Exception as e:
+        print(f"⚠️ Error en migración fecha_actualizacion: {e}")
+
+# Ejecutar migración al inicio (en producción y desarrollo)
+try:
+    migrar_fecha_actualizacion()
+except Exception as e:
+    print(f"⚠️ Error ejecutando migración: {e}")
+
 # Configurar Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
