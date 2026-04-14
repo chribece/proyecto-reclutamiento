@@ -330,10 +330,10 @@ def index():
         try:
             with db.get_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT cedula FROM candidatos WHERE email = %s LIMIT 1', (current_user.email,))
-                candidato = cursor.fetchone()
+                cursor.execute('SELECT cedula, nombre, apellido FROM candidatos WHERE email = %s LIMIT 1', (current_user.email,))
+                candidato_row = cursor.fetchone()
             
-            if not candidato:
+            if not candidato_row:
                 print("INDEX DEBUG: Candidato sin perfil, redirigiendo a completar perfil")
                 flash('Debes completar tu perfil de candidato para continuar', 'warning')
                 return redirect(url_for('completar_perfil_candidato'))
@@ -342,13 +342,19 @@ def index():
             print("INDEX DEBUG: Obteniendo cargos activos...")
             cargos = Cargo.get_all(estado='Activo')
             print(f"INDEX DEBUG: Cargos encontrados: {len(cargos)}")
-            return render_template('candidato/dashboard.html', cargos=cargos)
+            
+            # Extraer nombre y apellido del candidato
+            candidato_nombre = candidato_row.get('nombre', '') if isinstance(candidato_row, dict) else candidato_row[1] if len(candidato_row) > 1 else ''
+            candidato_apellido = candidato_row.get('apellido', '') if isinstance(candidato_row, dict) else candidato_row[2] if len(candidato_row) > 2 else ''
+            candidato_nombre_completo = f"{candidato_nombre} {candidato_apellido}".strip()
+            
+            return render_template('candidato/dashboard.html', cargos=cargos, candidato_nombre=candidato_nombre_completo)
         except Exception as e:
             print(f"INDEX ERROR: Error en dashboard candidato: {e}")
             import traceback
             traceback.print_exc()
             flash(f'Error al cargar dashboard: {str(e)}', 'error')
-            return render_template('candidato/dashboard.html', cargos=[])
+            return render_template('candidato/dashboard.html', cargos=[], candidato_nombre=current_user.nombre_usuario)
     else:
         print("INDEX DEBUG: Es admin/reclutador/gerente, obteniendo estadísticas...")
         # Administrador, reclutador y gerente ven estadísticas
