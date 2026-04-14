@@ -3,7 +3,7 @@
 ## 🔑 Usuarios del Sistema (Roles Administrativos)
 
 ### 👤 Administrador
-- **Email**: `  `
+- **Email**: ` admin@reclutamiento.com `
 - **Contraseña**: `Admin123!`
 - **Rol**: Administrador del sistema
 - **Permisos**: Acceso completo a todas las funcionalidades

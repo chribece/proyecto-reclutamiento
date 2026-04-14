@@ -529,7 +529,7 @@ class Postulacion:
     notas: str = ""
     puntaje_evaluacion: Optional[int] = None
     fecha_actualizacion: Optional[datetime] = None
-    activo: bool = True
+    # Nota: La tabla postulaciones no tiene columna activo
     
     candidato: Optional[Candidato] = None
     cargo: Optional[Cargo] = None
@@ -545,8 +545,7 @@ class Postulacion:
             fuente_reclutamiento=row.get('fuente_reclutamiento', ''),
             notas=row.get('notas', ''),
             puntaje_evaluacion=row.get('puntaje_evaluacion'),
-            fecha_actualizacion=row.get('fecha_actualizacion'),
-            activo=bool(row.get('activo', 1))
+            fecha_actualizacion=row.get('fecha_actualizacion')
         )
     
     def save(self) -> int:
@@ -555,18 +554,18 @@ class Postulacion:
             if self.id_postulacion:
                 cursor.execute('''
                     UPDATE postulaciones SET estado=%s, fuente_reclutamiento=%s, 
-                    notas=%s, puntaje_evaluacion=%s, fecha_actualizacion=NOW(), activo=%s
+                    notas=%s, puntaje_evaluacion=%s, fecha_actualizacion=NOW()
                     WHERE id_postulacion=%s
                 ''', (self.estado, self.fuente_reclutamiento, self.notas, 
-                      self.puntaje_evaluacion, int(self.activo), self.id_postulacion))
+                      self.puntaje_evaluacion, self.id_postulacion))
                 return self.id_postulacion
             else:
                 cursor.execute('''
                     INSERT INTO postulaciones (cedula, id_cargo, estado, 
-                    fuente_reclutamiento, notas, puntaje_evaluacion, activo)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    fuente_reclutamiento, notas, puntaje_evaluacion)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 ''', (self.cedula, self.id_cargo, self.estado,
-                      self.fuente_reclutamiento, self.notas, self.puntaje_evaluacion, int(self.activo)))
+                      self.fuente_reclutamiento, self.notas, self.puntaje_evaluacion))
                 return cursor.lastrowid
     
     def delete(self) -> bool:
@@ -628,13 +627,13 @@ class Postulacion:
             cursor = conn.cursor()
             
             # Construir consulta base
-            # Usar helper para valor boolean según tipo de BD
+            # Solo filtrar por candidato activo (p.activo no existe en postulaciones)
             from models import get_active_value
             activo_value = get_active_value()
             query = f'''
                 SELECT p.* FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = {activo_value} AND p.activo = {activo_value}
+                WHERE c.activo = {activo_value}
             '''
             params = []
             
@@ -669,12 +668,12 @@ class Postulacion:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Usar helper para valor boolean según tipo de BD
+            # Solo filtrar por candidato activo (p.activo no existe en postulaciones)
             activo_value = get_active_value()
             query = f'''
                 SELECT COUNT(*) as total FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = {activo_value} AND p.activo = {activo_value}
+                WHERE c.activo = {activo_value}
             '''
             params = []
             
@@ -692,13 +691,12 @@ class Postulacion:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Usar helpers para valores boolean según tipo de BD
+            # Solo filtrar por candidato activo (p.activo no existe en postulaciones)
             activo_true = get_active_value()
-            activo_false = 'FALSE' if db.db_type == 'postgresql' else '0'
             query = f'''
                 SELECT p.* FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = {activo_true} AND p.activo = {activo_false}
+                WHERE c.activo = {activo_true}
                 ORDER BY p.fecha_postulacion DESC
             '''
             
@@ -724,13 +722,12 @@ class Postulacion:
         with db.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Usar helpers para valores boolean según tipo de BD
+            # Solo filtrar por candidato activo (p.activo no existe en postulaciones)
             activo_true = get_active_value()
-            activo_false = 'FALSE' if db.db_type == 'postgresql' else '0'
             query = f'''
                 SELECT COUNT(*) as total FROM postulaciones p
                 JOIN candidatos c ON p.cedula = c.cedula
-                WHERE c.activo = {activo_true} AND p.activo = {activo_false}
+                WHERE c.activo = {activo_true}
             '''
             
             cursor.execute(query)
@@ -883,12 +880,12 @@ class EstadisticasRRHH:
                 cargos_activos = result['count'] if isinstance(result, dict) else result[0]
                 
                 # Total candidatos
-                cursor.execute('SELECT COUNT(*) as count FROM candidatos WHERE activo = %s', (1,))
+                cursor.execute(f'SELECT COUNT(*) as count FROM candidatos WHERE activo = {get_active_value()}')
                 result = cursor.fetchone()
                 total_candidatos = result['count'] if isinstance(result, dict) else result[0]
                 
                 # Candidatos activos
-                cursor.execute('SELECT COUNT(*) as count FROM candidatos WHERE activo = %s', (1,))
+                cursor.execute(f'SELECT COUNT(*) as count FROM candidatos WHERE activo = {get_active_value()}')
                 result = cursor.fetchone()
                 candidatos_activos = result['count'] if isinstance(result, dict) else result[0]
                 
