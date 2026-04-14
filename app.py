@@ -582,6 +582,16 @@ def completar_perfil_candidato():
 @require_role(['candidato'])
 def cargos_candidato():
     """Muestra cargos disponibles para que los candidatos se postlen"""
+    # Verificar si el candidato tiene perfil completo
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT cedula FROM candidatos WHERE email = %s LIMIT 1', (current_user.email,))
+        result = cursor.fetchone()
+    
+    if not result:
+        flash('Debes completar tu perfil de candidato para ver las vacantes disponibles', 'warning')
+        return redirect(url_for('completar_perfil_candidato'))
+    
     cargos = Cargo.get_all(estado='Activo')
     return render_template('candidato/cargos_disponibles.html', cargos=cargos)
 
@@ -599,8 +609,8 @@ def mis_postulaciones():
         result = cursor.fetchone()
     
     if not result:
-        flash('No se encontró tu perfil de candidato', 'warning')
-        return redirect(url_for('index'))
+        flash('Debes completar tu perfil de candidato para ver tus postulaciones', 'warning')
+        return redirect(url_for('completar_perfil_candidato'))
     
     cedula_candidato = result['cedula']
     
@@ -638,8 +648,8 @@ def postular_a_cargo(cargo_id):
         candidato = cursor.fetchone()
     
     if not candidato:
-        flash('No se encontró tu perfil de candidato', 'error')
-        return redirect(url_for('cargos_candidato'))
+        flash('Debes completar tu perfil de candidato para postularte a vacantes', 'warning')
+        return redirect(url_for('completar_perfil_candidato'))
     
     if request.method == 'POST':
         # Verificar si ya está postulado
