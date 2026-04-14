@@ -115,12 +115,17 @@ def verificar_y_crear_datos_iniciales():
             
             # Verificar si hay sucursales
             if _get_count_from_cursor(cursor, 'sucursales') == 0:
-                print(" Creando sucursal por defecto...")
-                if db.db_type == 'postgresql':
-                    cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, %s)", ('Matriz', 1))
-                else:
-                    cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (?, ?)", ('Matriz', 1))
-                print(" Sucursal 'Matriz' creada")
+                print(" Creando sucursales...")
+                sucursales = [
+                    'El inca', 'Mitad del Mundo', 'Occidental', 
+                    'Calderon', 'Tumbaco', 'Labrador', 'Selva Alegre'
+                ]
+                for nombre_sucursal in sucursales:
+                    if db.db_type == 'postgresql':
+                        cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (%s, TRUE)", (nombre_sucursal,))
+                    else:
+                        cursor.execute("INSERT INTO sucursales (nombre, activa) VALUES (?, ?)", (nombre_sucursal, 1))
+                print(f" {len(sucursales)} sucursales creadas")
             
             # Verificar si hay cargos de ejemplo
             if _get_count_from_cursor(cursor, 'cargos') == 0:
